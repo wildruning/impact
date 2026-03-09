@@ -1,0 +1,1919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Built By School Leaders — Shaped by Real School Problems</title>
+    <meta name="description" content="Built By School Leaders helps creative thinkers turn lived experience into practical digital solutions for themselves and their peers — transforming ideas into reality and passive income.">
+
+    <!-- Fonts: Comfortaa for rounded headlines, Reddit Sans for clean body copy -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;700&family=Reddit+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        /* ===== CSS Variables ===== */
+        :root {
+            --color-bg: #020624;
+            --color-bg-elevated: #0a0e35;
+            --color-bg-card: #10153f;
+            --color-cream: #f0ece4;
+            --color-cream-muted: rgba(240, 236, 228, 0.65);
+            --color-cream-faint: rgba(240, 236, 228, 0.1);
+            --color-accent: #BF4124;
+            --color-accent-glow: rgba(191, 65, 36, 0.35);
+            --color-accent-soft: rgba(191, 65, 36, 0.12);
+            --color-navy: #010440;
+            --color-navy-light: #1a1f5e;
+            --color-success: #4ade80;
+
+            --font-display: 'Comfortaa', cursive;
+            --font-body: 'Reddit Sans', sans-serif;
+
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+            --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        /* ===== Reset ===== */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-body);
+            font-size: 17px;
+            line-height: 1.7;
+            color: var(--color-cream);
+            background: var(--color-bg);
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        /* Grain overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 10000;
+        }
+
+        ::selection {
+            background: var(--color-accent);
+            color: var(--color-bg);
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        img {
+            max-width: 100%;
+            display: block;
+        }
+
+        /* ===== Utilities ===== */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 clamp(24px, 5vw, 80px);
+        }
+
+        /* ===== Typography ===== */
+        .headline-xl {
+            font-family: var(--font-display);
+            font-size: clamp(36px, 6.5vw, 80px);
+            font-weight: 700;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+        }
+
+        .headline-lg {
+            font-family: var(--font-display);
+            font-size: clamp(32px, 5vw, 64px);
+            font-weight: 700;
+            line-height: 1.1;
+            letter-spacing: -0.01em;
+        }
+
+        .headline-md {
+            font-family: var(--font-display);
+            font-size: clamp(24px, 3.5vw, 40px);
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .text-lg {
+            font-size: clamp(18px, 2vw, 22px);
+            line-height: 1.6;
+        }
+
+        .text-muted {
+            color: var(--color-cream-muted);
+        }
+
+        .text-accent {
+            color: var(--color-accent);
+        }
+
+        .italic {
+            color: var(--color-accent);
+            font-style: italic;
+        }
+
+        /* ===== Buttons ===== */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            font-family: var(--font-body);
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            padding: 20px 40px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.5s var(--ease-out-expo);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: var(--color-accent);
+            color: var(--color-bg);
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s var(--ease-out-expo);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px var(--color-accent-glow);
+        }
+
+        .btn-primary:hover::before {
+            transform: translateX(100%);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--color-cream);
+            border: 1px solid var(--color-cream-faint);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--color-cream);
+            background: var(--color-cream);
+            color: var(--color-bg);
+        }
+
+        .btn .arrow {
+            transition: transform 0.3s var(--ease-out-expo);
+            display: inline-block;
+        }
+
+        .btn:hover .arrow {
+            transform: translateX(4px);
+        }
+
+        /* ===== Navigation ===== */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 32px 0;
+            transition: all 0.5s var(--ease-out-expo);
+        }
+
+        .nav.scrolled {
+            padding: 20px 0;
+            background: rgba(2, 6, 36, 0.92);
+            backdrop-filter: blur(20px);
+        }
+
+        .nav-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0;
+        }
+
+        .logo img {
+            height: 60px;
+            width: auto;
+        }
+
+        .logo-footer img {
+            height: 48px;
+            width: auto;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 48px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: var(--color-cream-muted);
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--color-cream);
+        }
+
+        .nav-cta {
+            padding: 14px 28px;
+            font-size: 13px;
+        }
+
+        .nav-cta:hover {
+            color: var(--color-bg) !important;
+        }
+
+        /* ===== Hero ===== */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 160px 0 100px;
+            position: relative;
+        }
+
+        .hero-bg {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+        }
+
+        .hero-bg::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -30%;
+            width: 100%;
+            height: 200%;
+            background: radial-gradient(ellipse at center, var(--color-accent-glow) 0%, rgba(1, 4, 64, 0.3) 40%, transparent 65%);
+            opacity: 0.2;
+            animation: pulse 8s ease-in-out infinite;
+        }
+
+        .hero-grid {
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(var(--color-cream-faint) 1px, transparent 1px),
+                linear-gradient(90deg, var(--color-cream-faint) 1px, transparent 1px);
+            background-size: 100px 100px;
+            opacity: 0.3;
+            mask-image: radial-gradient(ellipse at bottom right, black 0%, transparent 70%);
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 40px;
+            opacity: 0;
+            animation: fadeIn 1s var(--ease-out-expo) 0.2s forwards;
+        }
+
+        .hero-eyebrow::before {
+            content: '';
+            width: 60px;
+            height: 1px;
+            background: var(--color-accent);
+        }
+
+        .hero-eyebrow span {
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--color-accent);
+        }
+
+        .hero-headline {
+            font-size: clamp(24px, 3.2vw, 40px);
+            max-width: 1100px;
+            margin-bottom: 48px;
+            opacity: 0;
+            animation: fadeInUp 1s var(--ease-out-expo) 0.4s forwards;
+        }
+
+        .hero-sub {
+            opacity: 0;
+            animation: fadeInUp 1s var(--ease-out-expo) 0.6s forwards;
+        }
+
+        .hero-description {
+            max-width: 620px;
+        }
+
+        .hero-description p {
+            margin-bottom: 20px;
+            color: var(--color-cream-muted);
+        }
+
+        .role-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 40px;
+        }
+
+        .role-chip {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--color-cream-muted);
+            padding: 6px 16px;
+            background: var(--color-cream-faint);
+            border: 1px solid rgba(240, 236, 228, 0.08);
+            border-radius: 100px;
+            transition: all 0.3s ease;
+        }
+
+        .role-chip:hover {
+            border-color: var(--color-accent);
+            color: var(--color-cream);
+        }
+
+        .hero-ctas {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .hero-trust {
+            font-size: 15px;
+            color: var(--color-cream);
+            opacity: 0.75;
+            line-height: 1.6;
+            max-width: 500px;
+            margin-top: 8px;
+        }
+
+        .hero-scroll {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            opacity: 0;
+            animation: fadeIn 1s var(--ease-out-expo) 1s forwards;
+        }
+
+        .hero-scroll span {
+            font-size: 11px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--color-cream-muted);
+        }
+
+        .scroll-line {
+            width: 1px;
+            height: 60px;
+            background: linear-gradient(to bottom, var(--color-cream-muted), transparent);
+            animation: scrollPulse 2s ease-in-out infinite;
+        }
+
+        /* ===== Possibility Section ===== */
+        .possibility {
+            padding: 200px 0;
+            position: relative;
+        }
+
+        .possibility-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 120px;
+            align-items: start;
+        }
+
+        .possibility-content h2 {
+            position: sticky;
+            top: 150px;
+        }
+
+        .possibility-body {
+            color: var(--color-cream-muted);
+            font-size: clamp(17px, 1.8vw, 20px);
+            line-height: 1.8;
+        }
+
+        .possibility-body p {
+            margin-bottom: 32px;
+        }
+
+        .possibility-bullets {
+            list-style: none;
+        }
+
+        .possibility-bullets li {
+            padding: 16px 0;
+            padding-left: 28px;
+            position: relative;
+            color: var(--color-cream);
+            font-size: 16px;
+            line-height: 1.6;
+            border-bottom: 1px solid var(--color-cream-faint);
+        }
+
+        .possibility-bullets li:last-child {
+            border-bottom: none;
+        }
+
+        .possibility-bullets li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 24px;
+            width: 8px;
+            height: 8px;
+            background: var(--color-accent);
+            border-radius: 50%;
+        }
+
+        /* ===== What We Believe ===== */
+        .believe {
+            padding: 200px 0;
+            background: var(--color-bg-elevated);
+            position: relative;
+        }
+
+        .believe-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 120px;
+            align-items: start;
+        }
+
+        .believe-content h2 {
+            position: sticky;
+            top: 150px;
+        }
+
+        .believe-text {
+            color: var(--color-cream-muted);
+            font-size: clamp(18px, 2vw, 21px);
+            line-height: 1.8;
+        }
+
+        /* ===== Who We Are ===== */
+        .who-we-are {
+            padding: 200px 0;
+            position: relative;
+        }
+
+        .who-we-are-content {
+            max-width: 900px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .who-we-are-content h2 {
+            margin-bottom: 32px;
+        }
+
+        .who-we-are-body {
+            font-size: clamp(18px, 2vw, 21px);
+            line-height: 1.8;
+            color: var(--color-cream-muted);
+            margin-bottom: 64px;
+            text-align: left;
+        }
+
+        .trust-signals {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2px;
+            background: var(--color-cream-faint);
+        }
+
+        .trust-signal {
+            background: var(--color-bg);
+            padding: 40px;
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            transition: all 0.5s var(--ease-out-expo);
+        }
+
+        .trust-signal:hover {
+            background: var(--color-bg-elevated);
+        }
+
+        .trust-signal-icon {
+            width: 44px;
+            height: 44px;
+            background: var(--color-accent-soft);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            color: var(--color-accent);
+        }
+
+        .trust-signal p {
+            font-size: 16px;
+            line-height: 1.6;
+            color: var(--color-cream);
+            text-align: left;
+        }
+
+        /* ===== What We Do ===== */
+        .what-we-do {
+            padding: 200px 0;
+            background: var(--color-bg-elevated);
+            position: relative;
+        }
+
+        .what-we-do-header {
+            margin-bottom: 100px;
+        }
+
+        .what-we-do-header p {
+            color: var(--color-cream-muted);
+            margin-top: 24px;
+            max-width: 600px;
+            font-size: clamp(18px, 2vw, 21px);
+        }
+
+        .do-cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2px;
+            background: var(--color-cream-faint);
+        }
+
+        .do-card {
+            background: var(--color-bg-elevated);
+            padding: 60px;
+            position: relative;
+            transition: all 0.5s var(--ease-out-expo);
+        }
+
+        .do-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 0;
+            background: var(--color-accent);
+            transition: height 0.5s var(--ease-out-expo);
+        }
+
+        .do-card:hover {
+            background: var(--color-bg);
+        }
+
+        .do-card:hover::before {
+            height: 100%;
+        }
+
+        .do-card-number {
+            font-family: var(--font-display);
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--color-accent);
+            margin-bottom: 16px;
+            display: block;
+            letter-spacing: 0.05em;
+        }
+
+        .do-card h3 {
+            font-family: var(--font-display);
+            font-size: clamp(20px, 2.5vw, 26px);
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--color-cream);
+        }
+
+        .do-card p {
+            font-size: 16px;
+            line-height: 1.7;
+            color: var(--color-cream-muted);
+        }
+
+        /* ===== Built For Section ===== */
+        .built-for {
+            padding: 200px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .built-for-header {
+            max-width: 700px;
+            margin-bottom: 80px;
+        }
+
+        .built-for-header h2 {
+            margin-bottom: 24px;
+        }
+
+        .built-for-header p {
+            color: var(--color-cream-muted);
+            font-size: clamp(18px, 2vw, 21px);
+        }
+
+        .cluster-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2px;
+            background: var(--color-cream-faint);
+        }
+
+        .cluster-card {
+            background: var(--color-bg);
+            padding: 48px 40px;
+            transition: all 0.5s var(--ease-out-expo);
+            position: relative;
+        }
+
+        .cluster-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 40px;
+            right: 40px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--color-accent-glow), transparent);
+            opacity: 0;
+            transition: opacity 0.5s var(--ease-out-expo);
+        }
+
+        .cluster-card:hover {
+            background: var(--color-bg-elevated);
+        }
+
+        .cluster-card:hover::after {
+            opacity: 1;
+        }
+
+        .cluster-card h3 {
+            font-family: var(--font-display);
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--color-cream);
+        }
+
+        .cluster-card p {
+            color: var(--color-cream-muted);
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .cluster-bridge {
+            margin-top: 64px;
+            text-align: center;
+            font-family: var(--font-display);
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--color-cream-muted);
+            font-style: italic;
+        }
+
+        /* ===== Why Different ===== */
+        .different {
+            padding: 200px 0;
+            background: var(--color-bg-elevated);
+            position: relative;
+        }
+
+        .different-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 120px;
+            align-items: start;
+        }
+
+        .different-content h2 {
+            position: sticky;
+            top: 150px;
+        }
+
+        .different-list {
+            list-style: none;
+        }
+
+        .different-list li {
+            padding: 32px 0;
+            border-bottom: 1px solid var(--color-cream-faint);
+            font-size: clamp(17px, 1.8vw, 20px);
+            line-height: 1.5;
+            color: var(--color-cream);
+        }
+
+        .different-list li:first-child {
+            padding-top: 0;
+        }
+
+        .different-list li strong {
+            color: var(--color-accent);
+            font-weight: 600;
+        }
+
+        .different-closer {
+            padding-top: 40px;
+            color: var(--color-cream-muted);
+            font-size: clamp(17px, 1.8vw, 20px);
+            line-height: 1.6;
+            font-style: italic;
+        }
+
+        /* ===== How It Works ===== */
+        .how-it-works {
+            padding: 200px 0;
+            position: relative;
+        }
+
+        .how-header {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            margin-bottom: 80px;
+            align-items: end;
+        }
+
+        .how-header p {
+            color: var(--color-cream-muted);
+            max-width: 480px;
+        }
+
+        .steps {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            position: relative;
+        }
+
+        .steps::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 44px;
+            width: 1px;
+            background: linear-gradient(180deg, transparent, var(--color-cream-faint) 10%, var(--color-cream-faint) 90%, transparent);
+        }
+
+        .step {
+            display: grid;
+            grid-template-columns: 88px 1fr;
+            gap: 40px;
+            padding: 40px 0;
+            text-align: left;
+            position: relative;
+            border-bottom: 1px solid var(--color-cream-faint);
+        }
+
+        .step:last-child {
+            border-bottom: none;
+        }
+
+        .step-icon {
+            width: 88px;
+            height: 88px;
+            background: var(--color-bg-elevated);
+            border: 1px solid var(--color-cream-faint);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 1;
+            transition: all 0.5s var(--ease-out-expo);
+            flex-shrink: 0;
+        }
+
+        .step:hover .step-icon {
+            border-color: var(--color-accent);
+            box-shadow: 0 0 60px var(--color-accent-glow);
+        }
+
+        .step-icon span {
+            font-family: var(--font-display);
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1;
+            color: var(--color-cream);
+        }
+
+        .step-icon--highlight {
+            background: var(--color-accent);
+            border-color: var(--color-accent);
+        }
+
+        .step-icon--highlight span {
+            color: var(--color-bg);
+        }
+
+        .step-body {
+            padding-top: 12px;
+        }
+
+        .step h3 {
+            font-family: var(--font-body);
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .step p {
+            font-size: 16px;
+            color: var(--color-cream-muted);
+            line-height: 1.7;
+            max-width: 720px;
+        }
+
+        /* ===== Submit an Idea ===== */
+        .submit-idea {
+            padding: 200px 0;
+            background: var(--color-bg-elevated);
+            text-align: center;
+        }
+
+        .submit-idea-content {
+            max-width: 620px;
+            margin: 0 auto;
+        }
+
+        .submit-idea h2 {
+            margin-bottom: 40px;
+        }
+
+        .submit-details {
+            list-style: none;
+            text-align: left;
+            margin-bottom: 48px;
+        }
+
+        .submit-details li {
+            padding: 16px 0;
+            padding-left: 32px;
+            position: relative;
+            color: var(--color-cream-muted);
+            font-size: 17px;
+            border-bottom: 1px solid var(--color-cream-faint);
+        }
+
+        .submit-details li:last-child {
+            border-bottom: none;
+        }
+
+        .submit-details li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: var(--color-accent);
+            font-weight: 600;
+        }
+
+        /* ===== How Ideas Are Evaluated ===== */
+        .evaluation {
+            padding: 200px 0;
+            position: relative;
+        }
+
+        .evaluation-header {
+            max-width: 700px;
+            margin-bottom: 64px;
+        }
+
+        .evaluation-header h2 {
+            margin-bottom: 24px;
+        }
+
+        .evaluation-header p {
+            color: var(--color-cream-muted);
+            font-size: clamp(18px, 2vw, 21px);
+        }
+
+        .dimension-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 2px;
+            background: var(--color-cream-faint);
+        }
+
+        .dimension {
+            background: var(--color-bg);
+            padding: 40px 28px;
+            text-align: center;
+            transition: all 0.5s var(--ease-out-expo);
+        }
+
+        .dimension:hover {
+            background: var(--color-bg-elevated);
+        }
+
+        .dimension h4 {
+            font-family: var(--font-display);
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--color-accent);
+        }
+
+        .dimension p {
+            color: var(--color-cream-muted);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        /* ===== What to Expect ===== */
+        .expect {
+            padding: 200px 0;
+            background: var(--color-bg-elevated);
+        }
+
+        .expect-content {
+            max-width: 700px;
+        }
+
+        .expect-content h2 {
+            margin-bottom: 48px;
+        }
+
+        .expect-list {
+            list-style: none;
+        }
+
+        .expect-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 24px;
+            padding: 24px 0;
+            border-bottom: 1px solid var(--color-cream-faint);
+            font-size: 17px;
+            color: var(--color-cream);
+        }
+
+        .expect-list li:last-child {
+            border-bottom: none;
+        }
+
+        .expect-check {
+            width: 32px;
+            height: 32px;
+            background: var(--color-accent-soft);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            color: var(--color-accent);
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        /* ===== Who This Is For ===== */
+        .who-for {
+            padding: 200px 0;
+            position: relative;
+        }
+
+        .who-for h2 {
+            margin-bottom: 64px;
+        }
+
+        .who-for-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 120px;
+        }
+
+        .who-for-col h3 {
+            font-family: var(--font-display);
+            font-size: clamp(20px, 2.5vw, 26px);
+            font-weight: 700;
+            margin-bottom: 32px;
+            color: var(--color-cream);
+        }
+
+        .fit-list {
+            list-style: none;
+        }
+
+        .fit-list li {
+            padding: 20px 0;
+            padding-left: 32px;
+            position: relative;
+            font-size: 16px;
+            color: var(--color-cream-muted);
+            line-height: 1.6;
+            border-bottom: 1px solid var(--color-cream-faint);
+        }
+
+        .fit-list li:last-child {
+            border-bottom: none;
+        }
+
+        .fit-list.good li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--color-success);
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .fit-list.not li::before {
+            content: '✕';
+            position: absolute;
+            left: 0;
+            color: var(--color-cream-muted);
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        /* ===== Final CTA ===== */
+        .final-cta {
+            padding: 200px 0;
+            background: var(--color-bg-elevated);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .final-cta::before {
+            content: '';
+            position: absolute;
+            top: -200px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(ellipse at center, var(--color-accent-glow) 0%, transparent 60%);
+            opacity: 0.15;
+        }
+
+        .final-cta-content {
+            position: relative;
+            z-index: 1;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .final-cta .headline-lg {
+            margin-bottom: 24px;
+        }
+
+        .final-cta .text-lg {
+            color: var(--color-cream-muted);
+            margin-bottom: 48px;
+        }
+
+        .final-cta-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* ===== Footer ===== */
+        .footer {
+            padding: 80px 0 40px;
+            border-top: 1px solid var(--color-cream-faint);
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 80px;
+            margin-bottom: 80px;
+        }
+
+        .footer-brand p {
+            color: var(--color-cream-muted);
+            font-size: 15px;
+            max-width: 280px;
+            margin-top: 24px;
+        }
+
+        .footer-links h5 {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--color-cream-muted);
+            margin-bottom: 24px;
+        }
+
+        .footer-links ul {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 16px;
+            font-size: 15px;
+            color: var(--color-cream-muted);
+        }
+
+        .footer-links a {
+            font-size: 15px;
+            color: var(--color-cream);
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--color-accent);
+        }
+
+        .footer-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 40px;
+            border-top: 1px solid var(--color-cream-faint);
+            font-size: 13px;
+            color: var(--color-cream-muted);
+        }
+
+        .footer-legal {
+            display: flex;
+            gap: 32px;
+        }
+
+        .footer-legal a {
+            color: var(--color-cream-muted);
+        }
+
+        .footer-legal a:hover {
+            color: var(--color-cream);
+        }
+
+        .footer-parent {
+            margin-top: 24px;
+            text-align: center;
+            font-size: 14px;
+            color: var(--color-cream-muted);
+        }
+
+        .footer-parent a {
+            color: var(--color-accent);
+            transition: color 0.3s ease;
+        }
+
+        .footer-parent a:hover {
+            color: var(--color-cream);
+        }
+
+        /* ===== Animations ===== */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.15; transform: scale(1); }
+            50% { opacity: 0.25; transform: scale(1.1); }
+        }
+
+        @keyframes scrollPulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 1200px) {
+            .possibility-content,
+            .believe-content,
+            .different-content,
+            .who-for-grid {
+                grid-template-columns: 1fr;
+                gap: 48px;
+            }
+
+            .possibility-content h2,
+            .believe-content h2,
+            .different-content h2 {
+                position: static;
+            }
+
+            .how-header {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+
+            .cluster-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .do-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .trust-signals {
+                grid-template-columns: 1fr;
+            }
+
+            .dimension-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .footer-content {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .logo img {
+                height: 44px;
+            }
+
+            .logo-footer img {
+                height: 36px;
+            }
+
+            .hero {
+                padding: 120px 0 60px;
+            }
+
+            .hero-eyebrow {
+                margin-bottom: 24px;
+            }
+
+            .hero-headline {
+                margin-bottom: 32px;
+            }
+
+            .hero-ctas {
+                flex-direction: column;
+            }
+
+            .hero-description p {
+                margin-bottom: 16px;
+            }
+
+            .hero-scroll {
+                display: none;
+            }
+
+            .possibility, .believe, .who-we-are, .what-we-do,
+            .built-for, .different, .how-it-works, .submit-idea,
+            .evaluation, .expect, .who-for, .final-cta {
+                padding: 80px 0;
+            }
+
+            .what-we-do-header {
+                margin-bottom: 48px;
+            }
+
+            .do-card {
+                padding: 36px 24px;
+            }
+
+            .cluster-card {
+                padding: 32px 24px;
+            }
+
+            .built-for-header {
+                margin-bottom: 48px;
+            }
+
+            .step {
+                grid-template-columns: 56px 1fr;
+                gap: 20px;
+                padding: 28px 0;
+            }
+
+            .step-icon {
+                width: 56px;
+                height: 56px;
+            }
+
+            .step-icon span {
+                font-size: 20px;
+            }
+
+            .steps::before {
+                left: 28px;
+            }
+
+            .step-body {
+                padding-top: 6px;
+            }
+
+            .cluster-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .cluster-bridge {
+                margin-top: 40px;
+                font-size: 16px;
+            }
+
+            .dimension-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .dimension {
+                padding: 28px 24px;
+                text-align: left;
+            }
+
+            .role-chips {
+                gap: 6px;
+                margin-bottom: 28px;
+            }
+
+            .role-chip {
+                font-size: 12px;
+                padding: 4px 12px;
+            }
+
+            .how-header {
+                margin-bottom: 48px;
+            }
+
+            .possibility-content,
+            .believe-content,
+            .different-content,
+            .who-for-grid {
+                gap: 32px;
+            }
+
+            .submit-idea h2 {
+                margin-bottom: 28px;
+            }
+
+            .expect-content h2 {
+                margin-bottom: 32px;
+            }
+
+            .who-for h2 {
+                margin-bottom: 40px;
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+
+            .footer-bottom {
+                flex-direction: column;
+                gap: 24px;
+                text-align: center;
+            }
+
+            .final-cta {
+                padding: 100px 0;
+            }
+
+            .final-cta .headline-lg {
+                margin-bottom: 20px;
+            }
+
+            .final-cta .text-lg {
+                margin-bottom: 32px;
+            }
+
+            .final-cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav" id="nav">
+        <div class="container nav-content">
+            <a href="#" class="logo">
+                <img src="assets/color-light-style-vertical-child-school-leaders.png"
+                     srcset="assets/color-light-style-vertical-child-school-leaders.png 1x,
+                             assets/color-light-style-vertical-child-school-leaders@2x.png 2x,
+                             assets/color-light-style-vertical-child-school-leaders@3x.png 3x"
+                     alt="Built By School Leaders">
+            </a>
+            <ul class="nav-links">
+                <li><a href="#how-it-works">How It Works</a></li>
+                <li><a href="#submit">Submit an Idea</a></li>
+                <li><a href="#submit" class="btn btn-outline nav-cta">Get Started</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- 1) Hero -->
+    <section class="hero">
+        <div class="hero-bg">
+            <div class="hero-grid"></div>
+        </div>
+        <div class="container hero-content">
+            <div class="hero-eyebrow">
+                <span>A Built By Studios Vertical</span>
+            </div>
+            <h1 class="headline-xl hero-headline">
+                Built by School Leaders. Shaped by <span class="italic">real school problems.</span> Turned into practical solutions.
+            </h1>
+            <div class="hero-sub">
+                <div class="hero-description">
+                    <p class="text-lg">Built By School Leaders helps creative thinkers turn lived experience into practical digital solutions for themselves and their peers — transforming ideas into reality and passive income.</p>
+                    <div class="role-chips">
+                        <span class="role-chip">Principals</span>
+                        <span class="role-chip">Assistant Principals</span>
+                        <span class="role-chip">MTSS Coordinators</span>
+                        <span class="role-chip">Instructional Coaches</span>
+                        <span class="role-chip">SpEd Leaders</span>
+                        <span class="role-chip">Counselors</span>
+                        <span class="role-chip">Front Office Teams</span>
+                        <span class="role-chip">Operations</span>
+                        <span class="role-chip">Transportation</span>
+                        <span class="role-chip">Food Services</span>
+                    </div>
+                    <div class="hero-ctas">
+                        <a href="#how-it-works" class="btn btn-primary">
+                            See How It Works
+                            <span class="arrow">→</span>
+                        </a>
+                        <a href="#submit" class="btn btn-outline">
+                            Submit your great idea!
+                        </a>
+                    </div>
+                    <p class="hero-trust">Your ideas remain private by default. No technical expertise required. Turn your idea into cash.</p>
+                </div>
+            </div>
+        </div>
+        <div class="hero-scroll">
+            <span>Scroll</span>
+            <div class="scroll-line"></div>
+        </div>
+    </section>
+
+    <!-- 2) Possibility -->
+    <section class="possibility">
+        <div class="container">
+            <div class="possibility-content">
+                <h2 class="headline-lg">If you've ever thought <span class="italic">"there is a better way, and I think I know how"</span> — you're probably right. Turn that idea into passive income.</h2>
+                <div class="possibility-body">
+                    <p>School leaders see the breakdowns first: where systems have too much friction, where information gets lost, where meetings are inefficient, and where good intentions turn into paperwork. The best solutions are often already in your head — because you live the work. Turn those solutions into practical tools and your side-hustle.</p>
+                    <ul class="possibility-bullets">
+                        <li>You know what slows the school down.</li>
+                        <li>You know what creates confusion and miscommunication.</li>
+                        <li>You know how to drive better student outcomes.</li>
+                        <li>You know what tools schools wish existed — because you've built workarounds to survive without them.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3) What We Believe -->
+    <section class="believe">
+        <div class="container">
+            <div class="believe-content">
+                <h2 class="headline-lg">What we <span class="italic">believe</span></h2>
+                <p class="believe-text">School leaders who are involved in daily operations have the best understanding of what needs improvement and how to fix it. Built By School Leaders uses advanced technology to transform these insights into practical solutions, offering leaders structured guidance and opportunities to collaborate on sharpening and implementing their ideas. We believe software should simplify tasks, improve efficiency, and support human efforts — making processes easier rather than unnecessarily complicated.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4) Who We Are -->
+    <section class="who-we-are">
+        <div class="container">
+            <div class="who-we-are-content">
+                <h2 class="headline-lg">Who we are</h2>
+                <p class="who-we-are-body">Built By School Leaders is a practitioner-led software engineering studio. If a problem is real, recurring, and widely felt across schools, it's worth solving — and worth investing in. We're a builder partner that helps school leaders transform real problems into focused tools that work under real-world conditions.</p>
+                <div class="trust-signals">
+                    <div class="trust-signal">
+                        <div class="trust-signal-icon">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                        </div>
+                        <p>Built by and for practitioners</p>
+                    </div>
+                    <div class="trust-signal">
+                        <div class="trust-signal-icon">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                        </div>
+                        <p>Designed specifically for the realities and complexities of schools</p>
+                    </div>
+                    <div class="trust-signal">
+                        <div class="trust-signal-icon">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                        <p>Built to reduce burdens, improve communications, and improve outcomes</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5) What We Do -->
+    <section class="what-we-do">
+        <div class="container">
+            <div class="what-we-do-header">
+                <h2 class="headline-lg">What we do</h2>
+                <p>We partner with school leaders to help them refine ideas, vet them against real constraints, build focused tools, and support their adoption — so schools spend less time fighting systems and more time making life easier and improving outcomes.</p>
+            </div>
+            <div class="do-cards">
+                <div class="do-card">
+                    <span class="do-card-number">01</span>
+                    <h3>Explore and Refine Ideas</h3>
+                    <p>You bring the idea. We help you think it through, sharpen the solution, and turn your solution into a clear, well-documented professional concept. After a guided conversation with one of our AI-mentors, you'll walk away with a private Concept Memo — yours alone. Keep it, share it internally, or submit it to us when you're ready. Ideas are carefully vetted to ensure they are distinct, viable in the market, and genuinely solve problems schools face — before we start building.</p>
+                </div>
+                <div class="do-card">
+                    <span class="do-card-number">02</span>
+                    <h3>Build Practical, Focused Solutions</h3>
+                    <p>Our engineering team understands how to build solutions for schools. They are experienced in privacy, rostering, accessibility, adaptivity, reporting, gamification, and other critical elements. They know how to create durable tools that solve specific problems — without bloated platforms or feature overload. One-size-fits-all platforms rarely fit anyone well.</p>
+                </div>
+                <div class="do-card">
+                    <span class="do-card-number">03</span>
+                    <h3>Bring Solutions to Market</h3>
+                    <p>We know how to market your solution to school leaders, support discovery, positioning and rollout so tools are actually adopted in real schools and districts.</p>
+                </div>
+                <div class="do-card">
+                    <span class="do-card-number">04</span>
+                    <h3>Shared Infrastructure</h3>
+                    <p>Product design and engineering; AI architecture and safety layers appropriate for school environments; legal, IP, billing, and distribution — all handled by us.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 6) Built for the work of school leadership -->
+    <section class="built-for">
+        <div class="container">
+            <div class="built-for-header">
+                <h2 class="headline-lg">Built for the work that <span class="italic">keep schools performing</span></h2>
+                <p>Built By School Leaders includes instructional leadership and MTSS — but also the operational systems that determine whether plans become reality.</p>
+            </div>
+            <div class="cluster-grid">
+                <div class="cluster-card">
+                    <h3>MTSS + Intervention Coherence</h3>
+                    <p>Scheduling interventions, meeting follow-through, referrals, documentation, progress monitoring, cross-domain visibility (academics, behavior, attendance, SEL)</p>
+                </div>
+                <div class="cluster-card">
+                    <h3>Instructional Execution</h3>
+                    <p>Walkthrough workflows, coaching cycles, action steps, materials readiness, fidelity checks that don't become busywork</p>
+                </div>
+                <div class="cluster-card">
+                    <h3>Student Services + Family Communication</h3>
+                    <p>Attendance outreach, behavior response coordination, case management, multilingual communication workflows</p>
+                </div>
+                <div class="cluster-card">
+                    <h3>Operations + Compliance</h3>
+                    <p>Forms, approvals, audits, staffing coordination, substitutes, incident documentation</p>
+                </div>
+                <div class="cluster-card">
+                    <h3>Front Office + Daily Logistics</h3>
+                    <p>Visitors, meds, dismissal changes, parent requests, field trip processes, end-of-day chaos</p>
+                </div>
+                <div class="cluster-card">
+                    <h3>Transportation + Food Services</h3>
+                    <p>Real-time changes, counts, routing communication, exception handling, daily coordination</p>
+                </div>
+            </div>
+            <p class="cluster-bridge">If the problem is real, recurring, and shared across schools, it's worth capturing — and worth building.</p>
+        </div>
+    </section>
+
+    <!-- 7) Why This Is Different -->
+    <section class="different">
+        <div class="container">
+            <div class="different-content">
+                <h2 class="headline-lg">Why this is <span class="italic">different</span></h2>
+                <div>
+                    <ul class="different-list">
+                        <li><strong>Not a traditional edtech platform</strong> (no generic tools built far from schools)</li>
+                        <li><strong>Not a curriculum program</strong> (no one-size binders and compliance theater)</li>
+                        <li><strong>Not "AI for its own sake"</strong> (reliability, transparency, and responsibility where it matters)</li>
+                    </ul>
+                    <p class="different-closer">This is practitioner-led software creation supported by experienced educators, mentors, and builders who understand how schools actually function.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 8) How It Works -->
+    <section class="how-it-works" id="how-it-works">
+        <div class="container">
+            <div class="how-header">
+                <h2 class="headline-lg">How it works</h2>
+                <p class="text-lg">Problem first. Thoughtful vetting. Light builds. Real school signals. Scale the ones that work.</p>
+            </div>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-icon step-icon--highlight">
+                        <span>01</span>
+                    </div>
+                    <div class="step-body">
+                        <h3>Problem First</h3>
+                        <p>Our automated Product Idea Ingestion Engine (PIIE) enables users to systematically organize their ideas. The process is confidential; your idea will not be submitted until you choose to do so. Upon completion, you will receive a comprehensive concept memo that documents the specific school challenge you face each week and outlines a proposed solution. You may save, print, or share this memo with yourself, and submit it to us for review at your convenience. The PIIE assists in mapping out workflow processes, identifying breakdowns, and highlighting relevant constraints such as time, staffing, compliance, and privacy. Additionally, common failure modes are clearly defined to ensure solutions are grounded in practical realities rather than idealized scenarios.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-icon">
+                        <span>02</span>
+                    </div>
+                    <div class="step-body">
+                        <h3>Idea Coaching</h3>
+                        <p>We pressure-test the idea with industry experts, investigate what already exists, why it falls short, and what a realistic "version 1" could be. We also decide what should remain human-led and where technology truly helps. The aim is to create a practical plan that results in a solution schools are likely to implement.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-icon">
+                        <span>03</span>
+                    </div>
+                    <div class="step-body">
+                        <h3>Light Build</h3>
+                        <p>We build a small, focused MVP designed around real school routines and usability. You give quick feedback as we build so we don't drift into "features that look good in demos." The result is a usable first version—not a bloated platform.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-icon">
+                        <span>04</span>
+                    </div>
+                    <div class="step-body">
+                        <h3>Real-World Signals</h3>
+                        <p>We test the tool in real meetings and routines to see if it reduces burden and improves follow-through. We look for adoption signals (do people keep using it) and practical value (does it save time or improve execution). We also check willingness to pay so the solution can sustain.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-icon">
+                        <span>05</span>
+                    </div>
+                    <div class="step-body">
+                        <h3>Scale or Stop</h3>
+                        <p>If it earns real momentum, we improve it, harden it, and expand it to more schools and districts. If it doesn't, we stop quickly and learn why and consider how to overcome those challenges. Tools that prove practical value get more funding and engineering.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 9) How to Submit an Idea -->
+    <section class="submit-idea" id="submit">
+        <div class="container">
+            <div class="submit-idea-content">
+                <h2 class="headline-lg">Submit an idea <span class="text-muted" style="font-size: 0.6em; font-weight: 400;">(no forms, no jargon)</span></h2>
+                <ul class="submit-details">
+                    <li>A guided, branching conversation — not a long intake form</li>
+                    <li>Takes about 15-30 minutes</li>
+                    <li>You don't need a business plan or technical language</li>
+                    <li>Private by default (nothing shared with us, but you can save it, print it, share it with others)</li>
+                </ul>
+                <a href="#" class="btn btn-primary">
+                    Start the Idea Conversation
+                    <span class="arrow">→</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 10) How Ideas Are Evaluated -->
+    <section class="evaluation">
+        <div class="container">
+            <div class="evaluation-header">
+                <h2 class="headline-lg">How we evaluate ideas</h2>
+                <p>This isn't a competition. Good ideas aren't "rejected" — they're clarified and refined. We look for ideas that can genuinely reduce burden and improve execution in real schools.</p>
+            </div>
+            <div class="dimension-grid">
+                <div class="dimension">
+                    <h4>Problem Clarity + Frequency</h4>
+                    <p>Is this pain recurring and widely felt?</p>
+                </div>
+                <div class="dimension">
+                    <h4>Impact</h4>
+                    <p>Does it improve follow-through, efficiency, equity, or student support?</p>
+                </div>
+                <div class="dimension">
+                    <h4>Feasibility</h4>
+                    <p>Can it work inside school constraints (time, staffing, policy, privacy)?</p>
+                </div>
+                <div class="dimension">
+                    <h4>Adoption Likelihood</h4>
+                    <p>Would leaders actually use it weekly in real routines?</p>
+                </div>
+                <div class="dimension">
+                    <h4>Focus</h4>
+                    <p>Can it ship as a practical tool (not a massive platform)?</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 11) What to Expect -->
+    <section class="expect">
+        <div class="container">
+            <div class="expect-content">
+                <h2 class="headline-lg">What to expect</h2>
+                <ul class="expect-list">
+                    <li>
+                        <span class="expect-check">✓</span>
+                        Clear communication and defined next steps
+                    </li>
+                    <li>
+                        <span class="expect-check">✓</span>
+                        Practical timelines (built around school calendars)
+                    </li>
+                    <li>
+                        <span class="expect-check">✓</span>
+                        A realistic definition of "version 1"
+                    </li>
+                    <li>
+                        <span class="expect-check">✓</span>
+                        If an idea doesn't move forward, you still walk away with sharper clarity and a professional concept summary
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- 12) Who This Is (and Isn't) For -->
+    <section class="who-for">
+        <div class="container">
+            <h2 class="headline-lg">Who this is <span class="italic">(and isn't)</span> for</h2>
+            <div class="who-for-grid">
+                <div class="who-for-col">
+                    <h3>Good fit</h3>
+                    <ul class="fit-list good">
+                        <li>Leaders who see recurring breakdowns and patterns across schools and have ideas on how to solve them</li>
+                        <li>People who care about feasibility and follow-through</li>
+                        <li>Anyone trying to reduce burden while improving student support systems and make a little money on the side</li>
+                    </ul>
+                </div>
+                <div class="who-for-col">
+                    <h3>Not a fit</h3>
+                    <ul class="fit-list not">
+                        <li>Sales pitches</li>
+                        <li>One-off hacks with no repeatable workflow</li>
+                        <li>Fully formed startups seeking funding (this is not pitch theater)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 13) Final CTA -->
+    <section class="final-cta">
+        <div class="container">
+            <div class="final-cta-content">
+                <h2 class="headline-lg">If you've ever said, <span class="italic">"We're doing this the hard way,"</span> this is for you.</h2>
+                <p class="text-lg">
+                    Submit a real problem. We'll help you turn it into something practical.
+                </p>
+                <div class="final-cta-buttons">
+                    <a href="#submit" class="btn btn-primary">
+                        Submit an Idea
+                        <span class="arrow">→</span>
+                    </a>
+                    <a href="#how-it-works" class="btn btn-outline">
+                        See How It Works
+                        <span class="arrow">→</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <a href="#" class="logo logo-footer">
+                        <img src="assets/color-light-style-vertical-child-school-leaders.png"
+                             srcset="assets/color-light-style-vertical-child-school-leaders.png 1x,
+                                     assets/color-light-style-vertical-child-school-leaders@2x.png 2x,
+                                     assets/color-light-style-vertical-child-school-leaders@3x.png 3x"
+                             alt="Built By School Leaders">
+                    </a>
+                    <p>Practitioner-led software creation for school leaders who see what's broken and know how to fix it.</p>
+                </div>
+                <div class="footer-links">
+                    <h5>Navigate</h5>
+                    <ul>
+                        <li><a href="#how-it-works">How It Works</a></li>
+                        <li><a href="#submit">Submit an Idea</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h5>Company</h5>
+                    <ul>
+                        <li><a href="https://d-squared70.github.io/Built-By-Studios-Core/">Built By Studios</a></li>
+                        <li><a href="#">About</a></li>
+                        <li><a href="#">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h5>Contact</h5>
+                    <ul>
+                        <li>Thomas DeSimone</li>
+                        <li><a href="tel:000-000-0000">000-000-0000</a></li>
+                        <li><a href="mailto:contact@builtbystudios.com">contact@builtbystudios.com</a></li>
+                        <li>100 Chicago Street, Chicago, IL</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Built By School Leaders. All rights reserved.</p>
+                <div class="footer-legal">
+                    <a href="#">Privacy</a>
+                    <a href="#">Terms</a>
+                </div>
+            </div>
+            <div class="footer-parent">
+                A vertical of <a href="https://d-squared70.github.io/Built-By-Studios-Core/">Built By Studios</a> — Practitioner-led software creation
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Navigation scroll effect
+        const nav = document.getElementById('nav');
+        window.addEventListener('scroll', () => {
+            nav.classList.toggle('scrolled', window.scrollY > 100);
+        });
+
+        // Intersection Observer for animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const fadeElements = document.querySelectorAll('.do-card, .step, .cluster-card, .dimension, .trust-signal, .different-list li, .expect-list li, .fit-list li, .submit-details li');
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry, index) => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '0';
+                    entry.target.style.transform = 'translateY(30px)';
+                    entry.target.style.transition = `all 0.8s cubic-bezier(0.16, 1, 0.3, 1) ${index * 0.08}s`;
+
+                    requestAnimationFrame(() => {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    });
+
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        fadeElements.forEach(el => observer.observe(el));
+    </script>
+</body>
+</html>

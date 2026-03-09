@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stop Asking AI to "Be Concise"</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0b;
+    --bg-subtle: #111113;
+    --bg-card: #161618;
+    --text: #e8e6e3;
+    --text-dim: #7a7872;
+    --text-muted: #4a4843;
+    --accent-problem: #e8564a;
+    --accent-layer1: #d4a24e;
+    --accent-layer2: #3db8a4;
+    --accent-layer3: #4aad6e;
+    --accent-bonus: #c9b99a;
+    --accent-recap: #8b8aea;
+    --font-display: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    overflow: hidden;
+    cursor: default;
+  }
+
+  /* ── SLIDE CONTAINER ── */
+  .presentation {
+    width: 100vw; height: 100vh;
+    position: relative;
+  }
+
+  .slide {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 80px 60px 280px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+    background: var(--bg);
+  }
+
+  .slide.active {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .slide-inner {
+    width: 100%;
+    max-width: 1100px;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .slide.active .slide-inner {
+    animation: fadeUp 0.5s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── SLIDE COUNTER ── */
+  .slide-counter {
+    position: fixed;
+    top: 32px; right: 40px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+    z-index: 100;
+  }
+
+  /* ── CHAPTER NAV ── */
+  .chapter-nav {
+    position: fixed;
+    left: 0; top: 0;
+    width: 240px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 40px 28px;
+    z-index: 100;
+    background: linear-gradient(90deg, rgba(10,10,11,0.95) 80%, transparent);
+  }
+
+  .chapter-item {
+    position: relative;
+    padding: 10px 0 10px 20px;
+    font-family: var(--font-body);
+    font-size: 12.5px;
+    font-weight: 400;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color 0.3s ease;
+    letter-spacing: 0.02em;
+    border-left: 1.5px solid transparent;
+  }
+
+  .chapter-item:hover {
+    color: var(--text-dim);
+  }
+
+  .chapter-item.active {
+    color: var(--text);
+    border-left-color: var(--current-accent, var(--text));
+    font-weight: 500;
+  }
+
+  .chapter-item.visited {
+    color: var(--text-dim);
+  }
+
+  .chapter-item + .chapter-item {
+    margin-top: 2px;
+  }
+
+  /* ── TYPOGRAPHY ── */
+  .slide-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    opacity: 0.5;
+  }
+
+  .slide-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 52px;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 16px;
+  }
+
+  .slide-subtitle {
+    font-size: 20px;
+    font-weight: 300;
+    color: var(--text-dim);
+    line-height: 1.5;
+    max-width: 600px;
+  }
+
+  .big-number {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 140px;
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+
+  .accent-problem { color: var(--accent-problem); }
+  .accent-layer1 { color: var(--accent-layer1); }
+  .accent-layer2 { color: var(--accent-layer2); }
+  .accent-layer3 { color: var(--accent-layer3); }
+  .accent-bonus { color: var(--accent-bonus); }
+  .accent-recap { color: var(--accent-recap); }
+
+  .bg-accent-problem { background: var(--accent-problem); }
+  .bg-accent-layer1 { background: var(--accent-layer1); }
+  .bg-accent-layer2 { background: var(--accent-layer2); }
+  .bg-accent-layer3 { background: var(--accent-layer3); }
+
+  /* ── DIAGRAM: ANATOMY ── */
+  .anatomy-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    width: 100%;
+    max-width: 700px;
+    margin-top: 36px;
+  }
+
+  .anatomy-layer {
+    display: flex;
+    align-items: center;
+    padding: 16px 24px;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 400;
+    transition: all 0.3s ease;
+    position: relative;
+  }
+
+  .anatomy-layer .layer-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    min-width: 140px;
+    margin-right: 16px;
+    letter-spacing: 0.05em;
+  }
+
+  .anatomy-layer.fluff {
+    background: rgba(232,86,74,0.06);
+    border: 1px solid rgba(232,86,74,0.12);
+    color: var(--text-dim);
+  }
+
+  .anatomy-layer.answer {
+    background: rgba(232,86,74,0.15);
+    border: 1px solid rgba(232,86,74,0.4);
+    color: var(--text);
+  }
+
+  .anatomy-layer.answer .layer-label {
+    color: var(--accent-problem);
+    font-weight: 500;
+  }
+
+  /* ── DIAGRAM: TRAINING LOOP ── */
+  .loop-container {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 48px;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+  }
+
+  .loop-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    flex: 1 1 0;
+    max-width: 160px;
+    height: 90px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: center;
+    line-height: 1.4;
+    padding: 10px;
+  }
+
+  .loop-node.cause {
+    background: rgba(232,86,74,0.08);
+    border: 1px solid rgba(232,86,74,0.2);
+    color: var(--text);
+  }
+
+  .loop-arrow {
+    font-size: 22px;
+    color: var(--text-muted);
+    font-weight: 300;
+  }
+
+  .loop-node.result {
+    background: rgba(232,86,74,0.15);
+    border: 1px solid rgba(232,86,74,0.35);
+    color: var(--accent-problem);
+    font-weight: 600;
+  }
+
+  /* ── DIAGRAM: DEGRADATION ── */
+  .degrade-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    margin-top: 48px;
+    height: 200px;
+    padding-bottom: 30px;
+    border-bottom: 1px solid var(--text-muted);
+    position: relative;
+    max-width: 700px;
+  }
+
+  .degrade-bar {
+    flex: 1;
+    border-radius: 4px 4px 0 0;
+    position: relative;
+    min-width: 30px;
+    transition: all 0.3s ease;
+  }
+
+  .degrade-label {
+    position: absolute;
+    bottom: -24px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  .degrade-axis-label {
+    position: absolute;
+    left: 0; bottom: -56px;
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    letter-spacing: 0.05em;
+  }
+
+  .degrade-axis-label-right {
+    position: absolute;
+    right: 0; bottom: -56px;
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    letter-spacing: 0.05em;
+  }
+
+  /* ── PROMPT DISPLAY ── */
+  .prompt-block {
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 10px;
+    padding: 28px 32px;
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.75;
+    color: var(--text);
+    margin-top: 12px;
+    position: relative;
+    max-width: 780px;
+  }
+
+  .prompt-block::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+    border-radius: 10px 0 0 10px;
+  }
+
+  .prompt-block.amber::before { background: var(--accent-layer1); }
+  .prompt-block.teal::before { background: var(--accent-layer2); }
+  .prompt-block.green::before { background: var(--accent-layer3); }
+  .prompt-block.cream::before { background: var(--accent-bonus); }
+
+  .prompt-block .highlight {
+    font-weight: 500;
+    padding: 1px 0;
+  }
+
+  .prompt-block .highlight.amber { color: var(--accent-layer1); }
+  .prompt-block .highlight.teal { color: var(--accent-layer2); }
+  .prompt-block .highlight.green { color: var(--accent-layer3); }
+  .prompt-block .highlight.cream { color: var(--accent-bonus); }
+
+  .prompt-tag {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+    font-weight: 500;
+  }
+
+  .prompt-tag.amber {
+    background: rgba(212,162,78,0.12);
+    color: var(--accent-layer1);
+  }
+
+  .prompt-tag.teal {
+    background: rgba(61,184,164,0.12);
+    color: var(--accent-layer2);
+  }
+
+  .prompt-tag.green {
+    background: rgba(74,173,110,0.12);
+    color: var(--accent-layer3);
+  }
+
+  .prompt-tag.cream {
+    background: rgba(201,185,154,0.12);
+    color: var(--accent-bonus);
+  }
+
+  /* ── COMPARISON ── */
+  .comparison-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 36px;
+    max-width: 860px;
+  }
+
+  .comparison-col {
+    padding: 28px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .comparison-col.negative {
+    background: rgba(232,86,74,0.04);
+    border-color: rgba(232,86,74,0.12);
+  }
+
+  .comparison-col.positive {
+    background: rgba(212,162,78,0.04);
+    border-color: rgba(212,162,78,0.12);
+  }
+
+  .comparison-col.positive-teal {
+    background: rgba(61,184,164,0.04);
+    border-color: rgba(61,184,164,0.12);
+  }
+
+  .comparison-header {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+    font-weight: 500;
+  }
+
+  .comparison-col.negative .comparison-header { color: var(--accent-problem); }
+  .comparison-col.positive .comparison-header { color: var(--accent-layer1); }
+  .comparison-col.positive-teal .comparison-header { color: var(--accent-layer2); }
+
+  .comparison-line {
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--text-dim);
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+  }
+
+  .comparison-line:last-child { border-bottom: none; }
+
+  .comparison-col.positive .comparison-line,
+  .comparison-col.positive-teal .comparison-line {
+    color: var(--text);
+  }
+
+  /* ── LAYER TITLE SLIDES ── */
+  .layer-title-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .layer-number {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 180px;
+    line-height: 0.85;
+    letter-spacing: -0.05em;
+    opacity: 0.1;
+    position: absolute;
+    right: 80px;
+    bottom: 80px;
+  }
+
+  .layer-when {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-top: 8px;
+    opacity: 0.5;
+  }
+
+  /* ── MOVE BADGE ── */
+  .move-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border-radius: 100px;
+    margin-bottom: 20px;
+    font-weight: 500;
+  }
+
+  .move-badge.amber {
+    background: rgba(212,162,78,0.1);
+    color: var(--accent-layer1);
+    border: 1px solid rgba(212,162,78,0.2);
+  }
+
+  .move-badge.teal {
+    background: rgba(61,184,164,0.1);
+    color: var(--accent-layer2);
+    border: 1px solid rgba(61,184,164,0.2);
+  }
+
+  .move-badge.green {
+    background: rgba(74,173,110,0.1);
+    color: var(--accent-layer3);
+    border: 1px solid rgba(74,173,110,0.2);
+  }
+
+  /* ── TASK BREAKDOWN ── */
+  .task-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 36px;
+    max-width: 700px;
+  }
+
+  .task-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 20px;
+    border-radius: 8px;
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+
+  .task-num {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    width: 28px; height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    flex-shrink: 0;
+  }
+
+  .task-num.teal {
+    background: rgba(61,184,164,0.15);
+    color: var(--accent-layer2);
+  }
+
+  .task-text {
+    font-size: 15px;
+    color: var(--text);
+    line-height: 1.4;
+  }
+
+  /* ── SHARPEN LEVELS ── */
+  .sharpen-levels {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 36px;
+    max-width: 720px;
+  }
+
+  .sharpen-level {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 20px 24px;
+    border-radius: 10px;
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+
+  .sharpen-intensity {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 600;
+    min-width: 80px;
+    padding-top: 3px;
+  }
+
+  .sharpen-intensity.light { color: rgba(74,173,110,0.6); }
+  .sharpen-intensity.medium { color: var(--accent-layer3); }
+  .sharpen-intensity.heavy { color: #6ee08a; }
+
+  .sharpen-text {
+    font-size: 15.5px;
+    color: var(--text);
+    line-height: 1.5;
+    font-family: var(--font-body);
+  }
+
+  .sharpen-bar {
+    width: 4px;
+    border-radius: 2px;
+    align-self: stretch;
+    flex-shrink: 0;
+  }
+
+  .sharpen-bar.light { background: rgba(74,173,110,0.3); }
+  .sharpen-bar.medium { background: rgba(74,173,110,0.55); }
+  .sharpen-bar.heavy { background: var(--accent-layer3); }
+
+  /* ── FORMAT EXAMPLES ── */
+  .format-example {
+    margin-top: 28px;
+    max-width: 780px;
+  }
+
+  .format-example-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    color: var(--text-muted);
+  }
+
+  .format-example-label.teal { color: var(--accent-layer2); }
+
+  /* ── MULTI-PROMPT VISUAL ── */
+  .multi-prompt {
+    margin-top: 32px;
+    max-width: 750px;
+  }
+
+  .multi-prompt-before {
+    padding: 16px 20px;
+    background: rgba(232,86,74,0.04);
+    border: 1px solid rgba(232,86,74,0.1);
+    border-radius: 8px;
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--text-dim);
+    margin-bottom: 20px;
+  }
+
+  .multi-prompt-before .task-tag {
+    display: inline;
+    background: rgba(232,86,74,0.12);
+    color: var(--accent-problem);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-family: var(--font-mono);
+    font-weight: 500;
+    margin: 0 2px;
+  }
+
+  /* ── RECAP ── */
+  .recap-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-top: 40px;
+    max-width: 900px;
+  }
+
+  .recap-card {
+    padding: 28px 24px;
+    border-radius: 10px;
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+
+  .recap-card-layer {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 14px;
+  }
+
+  .recap-card-title {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 14px;
+    line-height: 1.2;
+  }
+
+  .recap-move {
+    font-size: 13px;
+    color: var(--text-dim);
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    line-height: 1.4;
+  }
+
+  .recap-move:last-child { border-bottom: none; }
+
+  .recap-move-num {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    margin-right: 6px;
+  }
+
+  /* ── SUBTLE TEXTURE ── */
+  .slide::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.015'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .slide-inner { position: relative; z-index: 1; }
+
+  /* ── SMALL PROMPT ── */
+  .prompt-small {
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 8px;
+    padding: 18px 22px;
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: var(--text);
+    margin-top: 16px;
+    font-family: var(--font-body);
+    max-width: 700px;
+  }
+
+  /* ── PROGRESS DOT ── */
+  .slide-progress {
+    position: fixed;
+    bottom: 32px;
+    right: 40px;
+    display: flex;
+    gap: 4px;
+    z-index: 100;
+    opacity: 0.3;
+  }
+
+  .progress-dot {
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    transition: all 0.3s ease;
+  }
+
+  .progress-dot.active {
+    background: var(--text);
+    width: 16px;
+    border-radius: 2px;
+  }
+
+  /* ── DEMO BADGE ── */
+  @keyframes subtlePulse {
+    0%, 100% { opacity: 0.45; }
+    50% { opacity: 1; }
+  }
+
+  .demo-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: 500;
+    animation: subtlePulse 2.5s ease-in-out infinite;
+  }
+
+  .demo-label .dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--accent-layer2);
+    animation: subtlePulse 2.5s ease-in-out infinite;
+  }
+
+  .demo-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 100px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .demo-link:hover { opacity: 0.8; }
+
+  .demo-link.before-link {
+    background: rgba(232,86,74,0.08);
+    color: var(--accent-problem);
+    border: 1px solid rgba(232,86,74,0.15);
+  }
+
+  .demo-link.after-link {
+    background: rgba(61,184,164,0.08);
+    color: var(--accent-layer2);
+    border: 1px solid rgba(61,184,164,0.15);
+  }
+
+  /* Adjust slide padding for smaller screens */
+  @media (max-width: 1400px) {
+    .slide { padding: 50px 60px 50px 260px; }
+    .slide-title { font-size: 44px; }
+    .big-number { font-size: 110px; }
+    .layer-number { font-size: 140px; }
+  }
+</style>
+</head>
+<body>
+<div class="presentation" id="presentation">
+
+  <!-- ─── CHAPTER NAV ─── -->
+  <nav class="chapter-nav" id="chapterNav">
+    <div class="chapter-item" data-chapter="problem" onclick="goToChapter('problem')">The Problem</div>
+    <div class="chapter-item" data-chapter="layer1" onclick="goToChapter('layer1')">Layer 1 · Set the Rules</div>
+    <div class="chapter-item" data-chapter="layer2" onclick="goToChapter('layer2')">Layer 2 · Constrain the Prompt</div>
+    <div class="chapter-item" data-chapter="layer3" onclick="goToChapter('layer3')">Layer 3 · Tighten After</div>
+    <div class="chapter-item" data-chapter="recap" onclick="goToChapter('recap')">Recap</div>
+  </nav>
+
+  <!-- ─── SLIDE COUNTER ─── -->
+  <div class="slide-counter" id="slideCounter">1/15</div>
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- CHAPTER: THE PROBLEM                        -->
+  <!-- ════════════════════════════════════════════ -->
+
+  <!-- SLIDE 1: Anatomy of an AI Response (reduced to 3 boxes) -->
+  <div class="slide" data-chapter="problem">
+    <div class="slide-inner">
+      <div class="slide-label accent-problem">The Problem</div>
+      <div class="slide-title" style="font-size:42px;">The Anatomy of an AI Response</div>
+      <div class="anatomy-stack">
+        <div class="anatomy-layer fluff">
+          <span class="layer-label">Preamble</span>
+          <span>"Great question! Let me break this down for you..."</span>
+        </div>
+        <div class="anatomy-layer fluff">
+          <span class="layer-label">Filler</span>
+          <span>"It's worth noting that there are several factors..."</span>
+        </div>
+        <div class="anatomy-layer answer">
+          <span class="layer-label">Actual Answer</span>
+          <span>The one sentence you actually needed</span>
+        </div>
+        <div class="anatomy-layer fluff">
+          <span class="layer-label">Hedge</span>
+          <span>"Of course, this depends on your specific situation..."</span>
+        </div>
+        <div class="anatomy-layer fluff">
+          <span class="layer-label">Closing</span>
+          <span>"Let me know if you'd like me to elaborate further!"</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 2: Why AI Rambles -->
+  <div class="slide" data-chapter="problem">
+    <div class="slide-inner">
+      <div class="slide-label accent-problem">The Problem</div>
+      <div class="slide-title" style="font-size:40px;">Why AI Rambles</div>
+      <div class="slide-subtitle">It's not stupid. It's anxious.</div>
+      <div class="loop-container">
+        <div class="loop-node cause">Longer<br>answers</div>
+        <div class="loop-arrow">&rarr;</div>
+        <div class="loop-node cause">Higher ratings<br>from reviewers</div>
+        <div class="loop-arrow">&rarr;</div>
+        <div class="loop-node cause">Reinforced<br>behavior</div>
+        <div class="loop-arrow">&rarr;</div>
+        <div class="loop-node result">More words<br>= better score</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 3: The Compounding Tax -->
+  <div class="slide" data-chapter="problem">
+    <div class="slide-inner">
+      <div class="slide-label accent-problem">The Problem</div>
+      <div class="slide-title" style="font-size:40px;">The Compounding Tax</div>
+      <div class="slide-subtitle">Fluff fills memory. Memory loss degrades intelligence.</div>
+      <div class="degrade-chart">
+        <div class="degrade-bar" style="height:95%; background: rgba(232,86,74,0.5);"><div class="degrade-label">R1</div></div>
+        <div class="degrade-bar" style="height:88%; background: rgba(232,86,74,0.45);"><div class="degrade-label">R3</div></div>
+        <div class="degrade-bar" style="height:78%; background: rgba(232,86,74,0.4);"><div class="degrade-label">R5</div></div>
+        <div class="degrade-bar" style="height:66%; background: rgba(232,86,74,0.35);"><div class="degrade-label">R7</div></div>
+        <div class="degrade-bar" style="height:52%; background: rgba(232,86,74,0.3);"><div class="degrade-label">R9</div></div>
+        <div class="degrade-bar" style="height:40%; background: rgba(232,86,74,0.25);"><div class="degrade-label">R11</div></div>
+        <div class="degrade-bar" style="height:30%; background: rgba(232,86,74,0.2);"><div class="degrade-label">R13</div></div>
+        <div class="degrade-bar" style="height:22%; background: rgba(232,86,74,0.15);"><div class="degrade-label">R15</div></div>
+        <div class="degrade-axis-label">&larr; Response Quality</div>
+        <div class="degrade-axis-label-right">Conversation Length &rarr;</div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- CHAPTER: LAYER 1                            -->
+  <!-- ════════════════════════════════════════════ -->
+
+  <!-- SLIDE 4: Layer 1 Title -->
+  <div class="slide" data-chapter="layer1">
+    <div class="slide-inner">
+      <div class="layer-title-container">
+        <div class="slide-label accent-layer1">Layer 1</div>
+        <div class="slide-title accent-layer1" style="font-size:56px;">Set the Rules</div>
+        <div class="layer-when">Before you prompt</div>
+      </div>
+      <div class="layer-number accent-layer1">1</div>
+    </div>
+  </div>
+
+  <!-- SLIDE 5: Move 1 — Verbosity Spec (tag above prompt) -->
+  <div class="slide" data-chapter="layer1">
+    <div class="slide-inner">
+      <div class="move-badge amber">Move 1</div>
+      <div class="slide-title" style="font-size:38px;">Defining Terms</div>
+      <div class="slide-subtitle" style="font-size:16px;">Paste this into your custom instructions or Project</div>
+      <div style="margin-top:28px; max-width:780px;">
+        <div class="prompt-tag amber">Custom Instructions</div>
+        <div class="prompt-block amber">
+          For <span class="highlight amber">simple questions</span>, answer in <span class="highlight amber">1&ndash;2 sentences</span>. For <span class="highlight amber">medium questions</span>, give me <span class="highlight amber">3&ndash;5 sentences</span>. For <span class="highlight amber">complex questions</span>, give me <span class="highlight amber">one short summary paragraph</span> followed by <span class="highlight amber">up to 5 bullet points</span>. <span class="highlight amber">Start directly with the answer</span>. <span class="highlight amber">Stop after the last relevant fact</span>.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 6: Move 2 — Positive Instructions (with purple elephant) -->
+  <div class="slide" data-chapter="layer1">
+    <div class="slide-inner">
+      <div class="move-badge amber">Move 2</div>
+      <div class="slide-title" style="font-size:38px;">Positive Instructions</div>
+      <div class="slide-subtitle" style="font-size:15px;">Replace every "don't" with a "do"</div>
+      <div class="comparison-grid" style="position:relative;">
+        <div class="comparison-col negative">
+          <div class="comparison-header">&times; Negation</div>
+          <div class="comparison-line">"Don't write long introductions"</div>
+          <div class="comparison-line">"Don't use filler words"</div>
+          <div class="comparison-line">"Don't add unnecessary context"</div>
+        </div>
+        <div class="comparison-col positive">
+          <div class="comparison-header">&check; Direction</div>
+          <div class="comparison-line">"Start directly with the answer"</div>
+          <div class="comparison-line">"Use short declarative sentences"</div>
+          <div class="comparison-line">"Lead with the most important point"</div>
+        </div>
+        <!-- Purple elephant: centered above the gap between columns -->
+        <img src="Purple_Elephant.png" alt="" style="position:absolute; top:-52px; left:50%; transform:translateX(-50%); width:100px; height:auto; opacity:0.4; pointer-events:none; filter:drop-shadow(0 0 12px rgba(139,138,234,0.3));">
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- CHAPTER: LAYER 2                            -->
+  <!-- ════════════════════════════════════════════ -->
+
+  <!-- SLIDE 7: Layer 2 Title -->
+  <div class="slide" data-chapter="layer2">
+    <div class="slide-inner">
+      <div class="layer-title-container">
+        <div class="slide-label accent-layer2">Layer 2</div>
+        <div class="slide-title accent-layer2" style="font-size:56px;">Constrain the Prompt</div>
+        <div class="layer-when">During &mdash; In the prompt itself</div>
+      </div>
+      <div class="layer-number accent-layer2">2</div>
+    </div>
+  </div>
+
+  <!-- SLIDE 8: Move 3 — Force a Format (with demo/example) -->
+  <div class="slide" data-chapter="layer2">
+    <div class="slide-inner">
+      <div class="move-badge teal">Move 3</div>
+      <div class="slide-title" style="font-size:36px;">Force a Format That Can't Hold Fluff</div>
+      <div class="comparison-grid" style="margin-top:28px;">
+        <div class="comparison-col negative">
+          <div class="comparison-header">Open-ended prompt</div>
+          <div style="font-size:13.5px; color:var(--text-dim); line-height:1.65;">I run a 30-person company doing about 5 million a year. I need to grow our marketing but I'm not sure whether to hire someone in-house or use an outside agency. What should I consider?</div>
+          <div style="margin-top:14px; font-size:12px; color:var(--text-muted);">&rarr; 400&ndash;600 words of prose</div>
+        </div>
+        <div class="comparison-col positive-teal">
+          <div class="comparison-header">Format-constrained prompt</div>
+          <div style="font-size:13.5px; color:var(--text); line-height:1.65;">I run a 30-person company doing about 5 million a year. I need to grow our marketing but I'm not sure whether to hire someone in-house or use an outside agency. What should I consider? <span style="color:var(--accent-layer2); font-weight:500;">Answer only as a comparison table with rows for annual cost, time to ramp up, level of control, scalability, and biggest risk.</span></div>
+          <div style="margin-top:14px; font-size:12px; color:var(--accent-layer2);">&rarr; Clean, structured table</div>
+        </div>
+      </div>
+      <!-- Demo / Example links -->
+      <div style="display:flex; align-items:center; gap:14px; margin-top:20px;">
+        <div class="demo-label"><span class="dot"></span> Example</div>
+        <a href="https://chatgpt.com/share/699b7ae5-92b8-8011-b1f2-02959c83f044" target="_blank" class="demo-link before-link">Before &nearr;</a>
+        <a href="https://chatgpt.com/share/699b7af2-ef38-8011-9a15-ff991b42dace" target="_blank" class="demo-link after-link">After &nearr;</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 9: Fluff-Proof Formats -->
+  <div class="slide" data-chapter="layer2">
+    <div class="slide-inner">
+      <div class="move-badge teal">Move 3 &middot; Formats</div>
+      <div class="slide-title" style="font-size:36px;">Fluff-Proof Formats</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:32px; max-width:720px;">
+        <div style="padding:18px 22px; background:var(--bg-card); border:1px solid rgba(61,184,164,0.1); border-radius:8px;">
+          <div style="font-family:var(--font-mono); font-size:11px; color:var(--accent-layer2); letter-spacing:0.05em; margin-bottom:8px;">TABLE</div>
+          <div style="font-size:14px; color:var(--text-dim); line-height:1.5;">"Answer only as a comparison table"</div>
+        </div>
+        <div style="padding:18px 22px; background:var(--bg-card); border:1px solid rgba(61,184,164,0.1); border-radius:8px;">
+          <div style="font-family:var(--font-mono); font-size:11px; color:var(--accent-layer2); letter-spacing:0.05em; margin-bottom:8px;">CAPPED LIST</div>
+          <div style="font-size:14px; color:var(--text-dim); line-height:1.5;">"Exactly 5 bullet points, each under 15 words"</div>
+        </div>
+        <div style="padding:18px 22px; background:var(--bg-card); border:1px solid rgba(61,184,164,0.1); border-radius:8px;">
+          <div style="font-family:var(--font-mono); font-size:11px; color:var(--accent-layer2); letter-spacing:0.05em; margin-bottom:8px;">MATRIX</div>
+          <div style="font-size:14px; color:var(--text-dim); line-height:1.5;">"Answer only as a decision matrix"</div>
+        </div>
+        <div style="padding:18px 22px; background:var(--bg-card); border:1px solid rgba(61,184,164,0.1); border-radius:8px;">
+          <div style="font-family:var(--font-mono); font-size:11px; color:var(--accent-layer2); letter-spacing:0.05em; margin-bottom:8px;">NUMBERED STEPS</div>
+          <div style="font-size:14px; color:var(--text-dim); line-height:1.5;">"Give me 3 steps, each in one sentence"</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- CHAPTER: LAYER 3                            -->
+  <!-- ════════════════════════════════════════════ -->
+
+  <!-- SLIDE 11: Layer 3 Title -->
+  <div class="slide" data-chapter="layer3">
+    <div class="slide-inner">
+      <div class="layer-title-container">
+        <div class="slide-label accent-layer3">Layer 3</div>
+        <div class="slide-title accent-layer3" style="font-size:56px;">Tighten After</div>
+        <div class="layer-when">After you get the response</div>
+      </div>
+      <div class="layer-number accent-layer3">3</div>
+    </div>
+  </div>
+
+  <!-- SLIDE 12: Move 5 — The Sharpen Command (tag above prompt, no "Sharpen:") -->
+  <div class="slide" data-chapter="layer3">
+    <div class="slide-inner">
+      <div class="move-badge green">Move 4</div>
+      <div class="slide-title" style="font-size:38px;">The Sharpen Command</div>
+      <div class="slide-subtitle" style="font-size:15px;">Don't rewrite your prompt. Just reply with one line.</div>
+      <div style="margin-top:32px; max-width:780px;">
+        <div class="prompt-tag green">Reply with</div>
+        <div class="prompt-block green">
+          <span class="highlight green">Cut length by 50%</span>, <span class="highlight green">remove all generalizations</span>, <span class="highlight green">short punchy sentences only</span>.
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- SLIDE 14: The Filter Pass (merged slides 19+20) — step-reveal animation -->
+  <div class="slide" data-chapter="layer3" data-steps="1" data-current-step="0">
+    <div class="slide-inner">
+      <div class="move-badge green">Move 5</div>
+      <div class="slide-title" style="font-size:36px;">The Filter Pass</div>
+      <div class="slide-subtitle" style="font-size:14px;">For deep research that comes back as 20&ndash;30 pages</div>
+      <!-- Always visible: The prompt (dims when tip reveals) -->
+      <div class="dim-on-reveal" style="margin-top:28px; max-width:780px; transition: opacity 0.4s ease;">
+        <div class="prompt-tag green">Paste deep research output into a new conversation</div>
+        <div class="prompt-block green">
+          <span class="highlight green">Extract only the specific, actionable findings</span> from this report. <span class="highlight green">Remove all background context, general principles, and introductory material.</span> I only care about: <span class="highlight green">[your 2&ndash;3 specific questions]</span>.
+        </div>
+      </div>
+      <!-- Revealed on click: Tip callout -->
+      <div class="reveal-step" data-step="0" style="margin-top:20px; padding:14px 18px; background:rgba(74,173,110,0.04); border:1px solid rgba(74,173,110,0.1); border-radius:8px; display:flex; align-items:center; gap:12px; max-width:780px; opacity:0; transform:translateY(12px); transition: opacity 0.4s ease, transform 0.4s ease;">
+        <span style="font-size:14px; flex-shrink:0; opacity:0.7;">&#x1f4a1;</span>
+        <span style="font-size:13px; color:var(--text-dim); line-height:1.5;">For most research, skip deep research entirely &mdash; <span style="color:var(--accent-layer3); font-weight:500;">web search + extended reasoning</span> gives 90% of the quality at 10% the length.</span>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- CHAPTER: RECAP                              -->
+  <!-- ════════════════════════════════════════════ -->
+
+  <!-- SLIDE 15: Recap -->
+  <div class="slide" data-chapter="recap">
+    <div class="slide-inner">
+      <div class="slide-label accent-recap">Recap</div>
+      <div class="slide-title" style="font-size:42px;">The Three-Layer System</div>
+      <div class="recap-grid">
+        <div class="recap-card" style="border-top:2px solid var(--accent-layer1);">
+          <div class="recap-card-layer accent-layer1">Layer 1 &middot; Before</div>
+          <div class="recap-card-title">Set the Rules</div>
+          <div class="recap-move"><span class="recap-move-num accent-layer1">01</span> Defining Terms</div>
+          <div class="recap-move"><span class="recap-move-num accent-layer1">02</span> Positive Instructions</div>
+        </div>
+        <div class="recap-card" style="border-top:2px solid var(--accent-layer2);">
+          <div class="recap-card-layer accent-layer2">Layer 2 &middot; During</div>
+          <div class="recap-card-title">Constrain the Prompt</div>
+          <div class="recap-move"><span class="recap-move-num accent-layer2">03</span> Force a Format</div>
+        </div>
+        <div class="recap-card" style="border-top:2px solid var(--accent-layer3);">
+          <div class="recap-card-layer accent-layer3">Layer 3 &middot; After</div>
+          <div class="recap-card-title">Tighten After</div>
+          <div class="recap-move"><span class="recap-move-num accent-layer3">04</span> The Sharpen Command</div>
+          <div class="recap-move"><span class="recap-move-num accent-layer3">05</span> The Filter Pass</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ── State ──
+  const slides = document.querySelectorAll('.slide');
+  const counter = document.getElementById('slideCounter');
+  const chapterItems = document.querySelectorAll('.chapter-item');
+  let current = 0;
+  const total = slides.length;
+
+  // ── Accent color map ──
+  const accentMap = {
+    problem: '#e8564a',
+    layer1: '#d4a24e',
+    layer2: '#3db8a4',
+    layer3: '#4aad6e',
+    recap: '#8b8aea'
+  };
+
+  function showSlide(index) {
+    if (index < 0 || index >= total) return;
+    resetSteps(slides[current]);
+    slides[current].classList.remove('active');
+    current = index;
+    slides[current].classList.add('active');
+
+    // Update counter
+    counter.textContent = `${current + 1}/${total}`;
+
+    // Update chapter nav
+    const chapter = slides[current].dataset.chapter;
+    const accent = accentMap[chapter] || '#e8e6e3';
+    document.documentElement.style.setProperty('--current-accent', accent);
+
+    chapterItems.forEach(item => {
+      item.classList.remove('active');
+      // Mark visited chapters
+      const itemChapter = item.dataset.chapter;
+      const firstSlideIndex = [...slides].findIndex(s => s.dataset.chapter === itemChapter);
+      if (firstSlideIndex < current) {
+        item.classList.add('visited');
+      }
+      if (item.dataset.chapter === chapter) {
+        item.classList.add('active');
+      }
+    });
+  }
+
+  function goToChapter(chapter) {
+    const index = [...slides].findIndex(s => s.dataset.chapter === chapter);
+    if (index >= 0) showSlide(index);
+  }
+
+  // ── Step-reveal system ──
+  function getStepData(slide) {
+    const maxSteps = parseInt(slide.dataset.steps || '0');
+    const currentStep = parseInt(slide.dataset.currentStep || '0');
+    return { maxSteps, currentStep };
+  }
+
+  function revealStep(slide, stepIndex) {
+    const el = slide.querySelector(`.reveal-step[data-step="${stepIndex}"]`);
+    if (el) {
+      el.style.opacity = '1';
+      el.style.transform = 'translateY(0)';
+    }
+    // Dim any elements marked for dimming
+    const dimTarget = slide.querySelector('.dim-on-reveal');
+    if (dimTarget) dimTarget.style.opacity = '0.3';
+    slide.dataset.currentStep = stepIndex + 1;
+  }
+
+  function resetSteps(slide) {
+    slide.dataset.currentStep = '0';
+    slide.querySelectorAll('.reveal-step').forEach(el => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(12px)';
+    });
+    // Restore any dimmed elements
+    const dimTarget = slide.querySelector('.dim-on-reveal');
+    if (dimTarget) dimTarget.style.opacity = '1';
+  }
+
+  function advance() {
+    const slide = slides[current];
+    const { maxSteps, currentStep } = getStepData(slide);
+    if (maxSteps > 0 && currentStep < maxSteps) {
+      revealStep(slide, currentStep);
+    } else {
+      showSlide(current + 1);
+    }
+  }
+
+  function retreat() {
+    const slide = slides[current];
+    const { maxSteps, currentStep } = getStepData(slide);
+    if (maxSteps > 0 && currentStep > 0) {
+      // Hide the last revealed step
+      const lastStep = currentStep - 1;
+      const el = slide.querySelector(`.reveal-step[data-step="${lastStep}"]`);
+      if (el) {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(12px)';
+      }
+      // Restore any dimmed elements
+      const dimTarget = slide.querySelector('.dim-on-reveal');
+      if (dimTarget) dimTarget.style.opacity = '1';
+      slide.dataset.currentStep = lastStep;
+    } else {
+      showSlide(current - 1);
+    }
+  }
+
+  // ── Keyboard navigation ──
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+      e.preventDefault();
+      advance();
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      retreat();
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      showSlide(0);
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      showSlide(total - 1);
+    }
+  });
+
+  // ── Init ──
+  showSlide(0);
+</script>
+</body>
+</html>

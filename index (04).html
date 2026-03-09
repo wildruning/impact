@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DO, MAKE, KNOW — Claude CoWork System</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@300;400;500;600;700&family=Archivo:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #09090b;
+    --bg-card: #111113;
+    --text: #e8e4de;
+    --text-muted: #7a7670;
+    --text-dim: #4a4742;
+    --accent-shift: #c8956c;
+    --accent-framework: #c4a24e;
+    --accent-do: #5ca89e;
+    --accent-make: #5c8ec4;
+    --accent-know: #9b7ec4;
+    --accent-recap: #c4a24e;
+    --font-display: 'Cormorant', Georgia, serif;
+    --font-body: 'Archivo', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --current-accent: var(--accent-shift);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100vw; height: 100vh; overflow: hidden;
+    background: var(--bg); color: var(--text);
+    font-family: var(--font-body);
+  }
+
+  /* ── NAV ── */
+  .nav-sidebar {
+    position: fixed; left: 0; top: 50%; transform: translateY(-50%);
+    z-index: 100; display: flex; flex-direction: column; gap: 2px;
+    padding: 16px 0 16px 20px;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 16px 8px 0; cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .nav-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--text-dim); flex-shrink: 0;
+    transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .nav-label {
+    font-family: var(--font-body); font-size: 11px; font-weight: 500;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--text-dim); white-space: nowrap;
+    transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .nav-item.active .nav-dot {
+    width: 8px; height: 8px; background: var(--current-accent);
+    box-shadow: 0 0 12px var(--current-accent);
+  }
+  .nav-item.active .nav-label { color: var(--text); font-weight: 600; }
+  .nav-item.visited .nav-dot { background: var(--text-muted); }
+  .nav-item.visited .nav-label { color: var(--text-muted); }
+
+  /* ── COUNTER ── */
+  .slide-counter {
+    position: fixed; top: 28px; right: 36px;
+    font-family: var(--font-mono); font-size: 13px; font-weight: 300;
+    color: var(--text-muted); z-index: 100; letter-spacing: 0.05em;
+  }
+  .slide-counter .current-num { color: var(--text); font-weight: 500; }
+
+  /* ── SLIDES ── */
+  .slides-container { width: 100vw; height: 100vh; position: relative; }
+  .slide {
+    position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; visibility: hidden;
+    transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.5s;
+    padding: 60px 60px 60px 180px;
+  }
+  .slide.active { opacity: 1; visibility: visible; }
+  .slide-inner {
+    width: 100%; max-width: 1100px;
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 40px;
+  }
+
+  /* ── TYPOGRAPHY ── */
+  .headline { font-family: var(--font-display); font-weight: 300; line-height: 1.1; letter-spacing: -0.02em; }
+  .headline-xl { font-size: 72px; }
+  .headline-lg { font-size: 58px; }
+  .headline-md { font-size: 44px; }
+  .headline-sm { font-size: 36px; }
+  .subtext {
+    font-family: var(--font-body); font-size: 18px; font-weight: 300;
+    color: var(--text-muted); line-height: 1.6; max-width: 600px; text-align: center;
+  }
+  .label {
+    font-family: var(--font-body); font-size: 11px; font-weight: 600;
+    letter-spacing: 0.15em; text-transform: uppercase;
+  }
+  .accent { color: var(--current-accent); }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes scaleIn { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+  .slide.active .anim-up { animation: fadeUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+  .slide.active .anim-fade { animation: fadeIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+  .slide.active .anim-scale { animation: scaleIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+  .anim-up, .anim-fade, .anim-scale { opacity: 0; }
+  .d1 { animation-delay: 0.1s !important; }
+  .d2 { animation-delay: 0.25s !important; }
+  .d3 { animation-delay: 0.4s !important; }
+  .d4 { animation-delay: 0.55s !important; }
+
+  /* ── FLOW ── */
+  .flow-row { display: flex; align-items: center; gap: 20px; }
+  .flow-box {
+    padding: 16px 28px; border: 1px solid var(--text-dim); border-radius: 8px;
+    font-family: var(--font-body); font-size: 15px; font-weight: 500;
+    text-align: center; background: var(--bg-card);
+  }
+  .flow-box.highlighted {
+    border-color: var(--current-accent);
+    background: color-mix(in srgb, var(--current-accent) 8%, var(--bg-card));
+    color: var(--current-accent);
+  }
+  .flow-arrow { color: var(--text-dim); font-size: 20px; flex-shrink: 0; }
+
+  /* ── PROMPT BLOCK ── */
+  .prompt-block {
+    background: var(--bg-card); border: 1px solid #2a2a2d; border-radius: 12px;
+    padding: 32px 36px; width: 100%; max-width: 820px;
+    position: relative; overflow: hidden;
+  }
+  .prompt-block::before {
+    content: ''; position: absolute; top: 0; left: 0;
+    width: 3px; height: 100%; background: var(--current-accent); opacity: 0.6;
+  }
+  .prompt-block pre {
+    font-family: var(--font-mono); font-size: 13.5px; line-height: 1.75;
+    color: #8a8680; white-space: pre-wrap; word-wrap: break-word;
+  }
+  .prompt-block .pk { color: var(--current-accent); font-weight: 600; }
+  .prompt-block .pc { color: #4a4640; }
+  .prompt-block .ph {
+    color: #ffffff; font-weight: 500;
+    background: color-mix(in srgb, var(--current-accent) 25%, transparent);
+    padding: 2px 7px; border-radius: 4px;
+    border: 1px solid color-mix(in srgb, var(--current-accent) 40%, transparent);
+  }
+  .prompt-header {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--current-accent); margin-bottom: 20px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .prompt-header::before {
+    content: ''; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--current-accent); opacity: 0.5;
+  }
+  .prompt-block.wide {
+    max-width: 920px; max-height: 72vh; overflow-y: auto;
+    scrollbar-width: thin; scrollbar-color: var(--text-dim) transparent;
+  }
+  .prompt-block.wide::-webkit-scrollbar { width: 4px; }
+  .prompt-block.wide::-webkit-scrollbar-thumb { background: var(--text-dim); border-radius: 2px; }
+
+  /* ── FRAMEWORK CARDS ── */
+  .framework-row { display: flex; gap: 32px; width: 100%; max-width: 900px; }
+  .framework-card {
+    flex: 1; background: var(--bg-card); border: 1px solid #2a2a2d;
+    border-radius: 12px; padding: 32px 28px;
+    display: flex; flex-direction: column; align-items: center;
+    text-align: center; gap: 16px; position: relative; overflow: hidden;
+  }
+  .framework-card .level-bar {
+    position: absolute; bottom: 0; left: 0; width: 100%; height: 3px; opacity: 0.6;
+  }
+  .card-number { font-family: var(--font-display); font-size: 48px; font-weight: 300; line-height: 1; }
+  .card-title { font-family: var(--font-display); font-size: 28px; font-weight: 400; }
+  .card-desc { font-size: 14px; color: var(--text-muted); line-height: 1.5; }
+
+  /* ── BEFORE/AFTER ── */
+  .ba-container { display: flex; gap: 40px; width: 100%; max-width: 860px; }
+  .ba-panel {
+    flex: 1; background: var(--bg-card); border: 1px solid #2a2a2d;
+    border-radius: 12px; padding: 28px; display: flex; flex-direction: column; gap: 8px;
+  }
+  .ba-panel.after { border-color: color-mix(in srgb, var(--current-accent) 40%, #2a2a2d); }
+  .ba-label {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 12px;
+  }
+  .ba-file {
+    font-family: var(--font-mono); font-size: 12.5px; padding: 6px 10px;
+    border-radius: 4px; display: flex; align-items: center; gap: 8px;
+  }
+  .ba-panel:not(.after) .ba-file { color: var(--text-muted); background: color-mix(in srgb, var(--text-dim) 15%, transparent); }
+  .ba-panel.after .ba-file { color: var(--text); background: color-mix(in srgb, var(--current-accent) 8%, transparent); }
+  .ba-folder { font-weight: 600; color: var(--current-accent); margin-top: 8px; }
+  .file-icon { font-size: 14px; opacity: 0.5; }
+
+  /* ── INSIGHT BOX ── */
+  .insight-box {
+    background: var(--bg-card);
+    border: 1px solid color-mix(in srgb, var(--current-accent) 25%, #2a2a2d);
+    border-radius: 12px; padding: 32px 36px; max-width: 740px;
+    position: relative; overflow: hidden;
+  }
+  .insight-box::before {
+    content: ''; position: absolute; top: 0; left: 0;
+    width: 100%; height: 1px;
+    background: linear-gradient(90deg, var(--current-accent), transparent); opacity: 0.4;
+  }
+  .insight-quote {
+    font-family: var(--font-display); font-size: 20px; font-weight: 400;
+    line-height: 1.6; font-style: italic; color: var(--text);
+  }
+  .insight-quote .ph {
+    color: #ffffff; font-weight: 500; font-style: normal;
+    background: color-mix(in srgb, var(--current-accent) 18%, transparent);
+    padding: 1px 6px; border-radius: 3px;
+  }
+  .insight-source {
+    font-family: var(--font-mono); font-size: 11px; color: var(--current-accent);
+    margin-top: 16px; letter-spacing: 0.08em;
+  }
+
+  /* ── MEMORY FILE ── */
+  .memory-visual { display: flex; flex-direction: column; align-items: center; gap: 20px; width: 100%; max-width: 500px; }
+  .memory-file {
+    width: 100%; background: var(--bg-card); border: 1px solid #2a2a2d;
+    border-radius: 12px; padding: 24px; position: relative;
+  }
+  .memory-file-tab {
+    position: absolute; top: -12px; left: 24px; padding: 4px 16px;
+    background: var(--bg-card); border: 1px solid #2a2a2d;
+    border-radius: 6px 6px 0 0; font-family: var(--font-mono);
+    font-size: 11px; font-weight: 500; color: var(--current-accent);
+  }
+  .memory-entries { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+  .memory-entry {
+    font-family: var(--font-mono); font-size: 12px; color: var(--text-muted);
+    padding: 8px 12px; background: color-mix(in srgb, var(--current-accent) 4%, transparent);
+    border-radius: 6px; line-height: 1.5;
+  }
+  .memory-entry.new { border-left: 2px solid var(--current-accent); color: var(--text); }
+
+  /* ── CALLOUT ── */
+  .callout-small {
+    display: flex; align-items: center; gap: 10px; padding: 10px 18px;
+    background: color-mix(in srgb, var(--current-accent) 6%, var(--bg-card));
+    border: 1px solid color-mix(in srgb, var(--current-accent) 20%, #2a2a2d);
+    border-radius: 8px; font-family: var(--font-mono); font-size: 12px; color: var(--text-muted);
+  }
+
+  /* ── NOISE ── */
+  .slides-container::after {
+    content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 99; opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* ── RECAP ── */
+  .recap-stack { display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 860px; }
+  .recap-card {
+    display: flex; align-items: stretch; border-radius: 12px;
+    overflow: hidden; background: var(--bg-card); border: 1px solid #2a2a2d;
+  }
+  .recap-card-accent { width: 5px; flex-shrink: 0; }
+  .recap-card-body {
+    flex: 1; display: flex; align-items: center; gap: 20px; padding: 22px 28px;
+  }
+  .recap-num-name {
+    display: flex; align-items: baseline; gap: 12px; width: 160px; flex-shrink: 0;
+  }
+  .recap-num {
+    font-family: var(--font-display); font-size: 38px; font-weight: 300; line-height: 1;
+  }
+  .recap-name {
+    font-family: var(--font-display); font-size: 24px; font-weight: 400;
+  }
+  .recap-divider { width: 1px; align-self: stretch; background: #2a2a2d; flex-shrink: 0; }
+  .recap-text { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+  .recap-key { font-size: 15px; font-weight: 500; }
+  .recap-detail { font-size: 13px; color: var(--text-muted); line-height: 1.4; }
+  .recap-bar-zone { display: flex; align-items: center; gap: 8px; width: 140px; flex-shrink: 0; }
+  .recap-bar-track { flex: 1; height: 5px; background: #1a1a1d; border-radius: 3px; overflow: hidden; }
+  .recap-bar-fill { height: 100%; border-radius: 3px; }
+  .recap-bar-label { font-family: var(--font-mono); font-size: 10px; min-width: 50px; text-align: right; letter-spacing: 0.05em; }
+</style>
+</head>
+<body>
+
+<nav class="nav-sidebar" id="navSidebar"></nav>
+<div class="slide-counter">
+  <span class="current-num" id="currentSlide">1</span><span>/</span><span id="totalSlides">15</span>
+</div>
+
+<div class="slides-container">
+
+  <!-- ════════════════════════════════ -->
+  <!-- CHAPTER: THE SHIFT              -->
+  <!-- ════════════════════════════════ -->
+
+  <!-- S1: Read → Read + Write -->
+  <div class="slide" data-chapter="The Shift" data-accent="var(--accent-shift)">
+    <div class="slide-inner">
+      <div class="label accent anim-up d1">The Shift</div>
+      <div class="flow-row anim-up d2">
+        <div class="flow-box" style="opacity: 0.5; padding: 20px 36px;">
+          <div style="font-size: 28px; margin-bottom: 8px;">📖</div>
+          <div style="font-size: 17px;">Read Only</div>
+        </div>
+        <div class="flow-arrow" style="font-size: 28px;">→</div>
+        <div class="flow-box highlighted" style="padding: 20px 36px;">
+          <div style="font-size: 28px; margin-bottom: 8px;">📖 ✏️</div>
+          <div style="font-size: 17px;">Read + Write</div>
+        </div>
+      </div>
+      <div class="subtext anim-up d3" style="max-width: 520px;">
+        AI doesn't just <em>look at</em> your files anymore.<br>It goes into your systems and <span class="accent">takes action</span>.
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════ -->
+  <!-- CHAPTER: THE FRAMEWORK          -->
+  <!-- ════════════════════════════════ -->
+
+  <!-- S2: DO, MAKE, KNOW -->
+  <div class="slide" data-chapter="The Framework" data-accent="var(--accent-framework)">
+    <div class="slide-inner">
+      <div class="label accent anim-up d1">The Framework</div>
+      <div class="framework-row anim-up d2">
+        <div class="framework-card" style="--current-accent: var(--accent-do);">
+          <div class="card-number" style="color: var(--accent-do);">1</div>
+          <div class="card-title">DO</div>
+          <div class="card-desc">You tell AI what to do.<br>It does it.</div>
+          <div class="level-bar" style="background: var(--accent-do);"></div>
+        </div>
+        <div class="framework-card" style="--current-accent: var(--accent-make);">
+          <div class="card-number" style="color: var(--accent-make);">2</div>
+          <div class="card-title">MAKE</div>
+          <div class="card-desc">One input in. Finished work<br>across systems out.</div>
+          <div class="level-bar" style="background: var(--accent-make);"></div>
+        </div>
+        <div class="framework-card" style="--current-accent: var(--accent-know);">
+          <div class="card-number" style="color: var(--accent-know);">3</div>
+          <div class="card-title">KNOW</div>
+          <div class="card-desc">AI remembers.<br>Outputs sharpen over time.</div>
+          <div class="level-bar" style="background: var(--accent-know);"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════ -->
+  <!-- CHAPTER: LEVEL 1 — DO           -->
+  <!-- ════════════════════════════════ -->
+
+  <!-- S3: Messy Folder -->
+  <div class="slide" data-chapter="Level 1: DO" data-accent="var(--accent-do)">
+    <div class="slide-inner">
+      <div class="label accent anim-up d1">Level 1 — DO</div>
+      <h1 class="headline headline-md anim-up d2" style="text-align:center;">The Folder Everyone Has</h1>
+      <div class="ba-container anim-up d3">
+        <div class="ba-panel">
+          <div class="ba-label" style="color: var(--text-muted);">30 files. Zero organization.</div>
+          <div class="ba-file"><span class="file-icon">📄</span> IMG_4392.pdf</div>
+          <div class="ba-file"><span class="file-icon">📄</span> scan_final_v2.pdf</div>
+          <div class="ba-file"><span class="file-icon">📄</span> document (1).pdf</div>
+          <div class="ba-file"><span class="file-icon">📄</span> receipt_photo.jpg</div>
+          <div class="ba-file"><span class="file-icon">📄</span> contract_DRAFT.docx</div>
+          <div class="ba-file" style="color: var(--text-dim);">... +25 more</div>
+        </div>
+        <div class="ba-panel after">
+          <div class="ba-label accent">Organized by CoWork</div>
+          <div class="ba-folder">📁 Invoices/</div>
+          <div class="ba-file"><span class="file-icon">📄</span> 2026-01-15-Invoice-Acme.pdf</div>
+          <div class="ba-folder">📁 Contracts/</div>
+          <div class="ba-file"><span class="file-icon">📄</span> 2025-12-01-Contract-Bolt.pdf</div>
+          <div class="ba-folder">📁 Receipts/</div>
+          <div class="ba-file"><span class="file-icon">📄</span> 2026-02-03-Receipt-AWS.pdf</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S4: Level 1 Prompt -->
+  <div class="slide" data-chapter="Level 1: DO" data-accent="var(--accent-do)">
+    <div class="slide-inner" style="gap: 20px;">
+      <div class="label accent anim-up d1">Level 1 — Folder Instructions</div>
+      <div class="prompt-block wide anim-scale d2">
+        <div class="prompt-header">claude.md — Level 1</div>
+        <pre><span class="pk">ROLE:</span> You are a file organization assistant.
+
+<span class="pk">TASK:</span> Process every file in this folder.
+<span class="pc">-</span> <span class="ph">Read the content inside each file</span> (not just the filename)
+<span class="pc">-</span> Rename using the format: <span class="ph">[YYYY-MM-DD]-[Type]-[Description]</span>
+  <span class="pc">-</span> Types: Invoice, Contract, Receipt, Report, Correspondence, Other
+<span class="pc">-</span> Sort into subfolders by Type
+<span class="pc">-</span> If a subfolder doesn't exist, <span class="ph">create it</span>
+
+<span class="pk">CONSTRAINTS:</span>
+<span class="pc">-</span> <span class="ph">Never delete any files</span>
+<span class="pc">-</span> If you can't determine the date, use "UNDATED"
+<span class="pc">-</span> If you can't determine the type, use "Other"
+<span class="pc">-</span> Log every rename action to a file called <span class="ph">_changelog.txt</span>
+  <span class="pc">-</span> If _changelog.txt doesn't exist, create it</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- S5: claude.md Concept -->
+  <div class="slide" data-chapter="Level 1: DO" data-accent="var(--accent-do)">
+    <div class="slide-inner">
+      <div class="label accent anim-up d1">The Key Concept</div>
+      <h1 class="headline headline-md anim-up d2" style="text-align:center;">
+        <span style="font-family: var(--font-mono); font-size: 36px; font-weight: 400;">claude.md</span>
+      </h1>
+      <div class="flow-row anim-up d3" style="margin-top: 4px;">
+        <div class="flow-box">Drop files</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box">Open CoWork</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box highlighted">Already knows what to do</div>
+      </div>
+      <div class="callout-small anim-fade d4" style="margin-top: 4px;">
+        <span style="font-size: 14px; color: var(--current-accent);">💡</span>
+        <span>System instructions for your folder</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════ -->
+  <!-- CHAPTER: LEVEL 2 — MAKE         -->
+  <!-- ════════════════════════════════ -->
+
+  <!-- S6: One Input → CoWork → Outputs -->
+  <div class="slide" data-chapter="Level 2: MAKE" data-accent="var(--accent-make)">
+    <div class="slide-inner">
+      <div class="label accent anim-up d1">Level 2 — MAKE</div>
+      <h1 class="headline headline-md anim-up d2" style="text-align:center; max-width: 700px;">One input in. Finished work out.</h1>
+      <div class="anim-up d3" style="display: flex; align-items: center; gap: 0; width: 100%; max-width: 900px; justify-content: center;">
+        <!-- Input -->
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 110px;">
+          <div style="width: 64px; height: 64px; border-radius: 14px; background: var(--bg-card); border: 1px solid #2a2a2d; display: flex; align-items: center; justify-content: center; font-size: 26px;">📝</div>
+          <span style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);">transcript.txt</span>
+        </div>
+        <!-- Arrow -->
+        <div style="display: flex; align-items: center; padding: 0 8px;">
+          <div style="width: 36px; height: 1px; background: var(--text-dim);"></div>
+          <div style="color: var(--text-dim); font-size: 14px;">›</div>
+        </div>
+        <!-- CoWork -->
+        <div style="min-width: 90px; display: flex; justify-content: center;">
+          <div style="width: 72px; height: 72px; border-radius: 50%; background: var(--bg-card); border: 2px solid var(--current-accent); display: flex; align-items: center; justify-content: center; overflow: hidden;"><img src="claude.png" alt="CoWork" style="width: 40px; height: 40px; object-fit: contain;"></div>
+        </div>
+        <!-- Fan-out -->
+        <div style="position: relative; width: 80px; height: 210px; flex-shrink: 0;">
+          <svg viewBox="0 0 80 210" width="80" height="210" style="overflow: visible;">
+            <path d="M 0 105 L 28 105 L 76 26" fill="none" stroke="var(--text-dim)" stroke-width="1"/>
+            <path d="M 0 105 L 28 105 L 76 74" fill="none" stroke="var(--text-dim)" stroke-width="1"/>
+            <path d="M 0 105 L 28 105 L 76 136" fill="none" stroke="var(--text-dim)" stroke-width="1"/>
+            <path d="M 0 105 L 28 105 L 76 184" fill="none" stroke="var(--text-dim)" stroke-width="1"/>
+            <circle cx="76" cy="26" r="2.5" fill="var(--current-accent)" opacity="0.6"/>
+            <circle cx="76" cy="74" r="2.5" fill="var(--current-accent)" opacity="0.6"/>
+            <circle cx="76" cy="136" r="2.5" fill="var(--current-accent)" opacity="0.6"/>
+            <circle cx="76" cy="184" r="2.5" fill="var(--current-accent)" opacity="0.6"/>
+          </svg>
+        </div>
+        <!-- Outputs -->
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <div style="display: flex; align-items: center; gap: 12px; padding: 10px 18px; background: var(--bg-card); border: 1px solid #2a2a2d; border-radius: 8px; min-width: 210px;">
+            <div style="width: 30px; height: 30px; border-radius: 8px; background: color-mix(in srgb, var(--current-accent) 10%, var(--bg)); display: flex; align-items: center; justify-content: center; "><img src="gmail.png" alt="Gmail" style="width: 22px; height: 22px; object-fit: contain;"></div>
+            <span style="font-size: 14px; font-weight: 500;">Follow-up Email</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px; padding: 10px 18px; background: var(--bg-card); border: 1px solid #2a2a2d; border-radius: 8px;">
+            <div style="width: 30px; height: 30px; border-radius: 8px; background: color-mix(in srgb, var(--current-accent) 10%, var(--bg)); display: flex; align-items: center; justify-content: center; "><img src="G-sheets.png" alt="Google Sheets" style="width: 22px; height: 22px; object-fit: contain;"></div>
+            <span style="font-size: 14px; font-weight: 500;">Action Items (.xlsx)</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px; padding: 10px 18px; background: var(--bg-card); border: 1px solid #2a2a2d; border-radius: 8px;">
+            <div style="width: 30px; height: 30px; border-radius: 8px; background: color-mix(in srgb, var(--current-accent) 10%, var(--bg)); display: flex; align-items: center; justify-content: center; font-size: 18px;">📄</div>
+            <span style="font-size: 14px; font-weight: 500;">Executive Summary</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px; padding: 10px 18px; background: var(--bg-card); border: 1px solid #2a2a2d; border-radius: 8px;">
+            <div style="width: 30px; height: 30px; border-radius: 8px; background: color-mix(in srgb, var(--current-accent) 10%, var(--bg)); display: flex; align-items: center; justify-content: center; "><img src="hubspot.png" alt="HubSpot" style="width: 22px; height: 22px; object-fit: contain;"></div>
+            <span style="font-size: 14px; font-weight: 500;">CRM Entry</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S7: Data Connectors — tighter geometry -->
+  <div class="slide" data-chapter="Level 2: MAKE" data-accent="var(--accent-make)">
+    <div class="slide-inner">
+      <div class="label accent anim-up d1">Data Connectors</div>
+      <div class="anim-scale d2" style="position: relative; width: 460px; height: 340px;">
+        <svg viewBox="0 0 460 340" width="460" height="340" style="position: absolute; top: 0; left: 0; z-index: 0;">
+          <!-- Center at 230, 170 -->
+          <!-- Top line: center top (230,120) to icon bottom (230,78) -->
+          <line x1="230" y1="122" x2="230" y2="78" stroke="#3a3a3d" stroke-width="1" stroke-dasharray="5,5"/>
+          <!-- Right line: center right (280,170) to icon (375,170) -->
+          <line x1="282" y1="170" x2="375" y2="170" stroke="#3a3a3d" stroke-width="1" stroke-dasharray="5,5"/>
+          <!-- Bottom line: center bottom (230,220) to icon top (230,262) -->
+          <line x1="230" y1="218" x2="230" y2="262" stroke="#3a3a3d" stroke-width="1" stroke-dasharray="5,5"/>
+          <!-- Left line: center left (180,170) to icon right (86,170) -->
+          <line x1="178" y1="170" x2="86" y2="170" stroke="#3a3a3d" stroke-width="1" stroke-dasharray="5,5"/>
+        </svg>
+
+        <!-- Center hub -->
+        <div style="position: absolute; top: 170px; left: 230px; transform: translate(-50%, -50%); width: 100px; height: 100px; border-radius: 50%; background: var(--bg-card); border: 2px solid var(--current-accent); display: flex; align-items: center; justify-content: center; z-index: 2; overflow: hidden;"><img src="claude.png" alt="CoWork" style="width: 56px; height: 56px; object-fit: contain;"></div>
+
+        <!-- Top: Google Calendar — label above, icon below -->
+        <div style="position: absolute; top: 4px; left: 230px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 6px; z-index: 2;">
+          <span style="font-size: 12px; font-weight: 500; color: var(--text-muted);">Google Calendar</span>
+          <div style="width: 48px; height: 48px; border-radius: 12px; background: var(--bg-card); border: 1px solid #2a2a2d; display: flex; align-items: center; justify-content: center; "><img src="G-cal.png" alt="Google Calendar" style="width: 32px; height: 32px; object-fit: contain;"></div>
+        </div>
+
+        <!-- Right: Gmail -->
+        <div style="position: absolute; top: 170px; left: 327px; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; gap: 6px; z-index: 2;">
+          <div style="width: 48px; height: 48px; border-radius: 12px; background: var(--bg-card); border: 1px solid #2a2a2d; display: flex; align-items: center; justify-content: center; "><img src="gmail.png" alt="Gmail" style="width: 32px; height: 32px; object-fit: contain;"></div>
+          <span style="font-size: 12px; font-weight: 500; color: var(--text-muted);">Gmail</span>
+        </div>
+
+        <!-- Bottom: HubSpot/CRM -->
+        <div style="position: absolute; bottom: 4px; left: 230px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 6px; z-index: 2;">
+          <div style="width: 48px; height: 48px; border-radius: 12px; background: var(--bg-card); border: 1px solid #2a2a2d; display: flex; align-items: center; justify-content: center; "><img src="hubspot.png" alt="HubSpot" style="width: 32px; height: 32px; object-fit: contain;"></div>
+          <span style="font-size: 12px; font-weight: 500; color: var(--text-muted);">HubSpot / CRM</span>
+        </div>
+
+        <!-- Left: Google Drive -->
+        <div style="position: absolute; top: 170px; left: 70px; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; gap: 6px; z-index: 2;">
+          <div style="width: 48px; height: 48px; border-radius: 12px; background: var(--bg-card); border: 1px solid #2a2a2d; display: flex; align-items: center; justify-content: center; "><img src="G-drive.png" alt="Google Drive" style="width: 32px; height: 32px; object-fit: contain;"></div>
+          <span style="font-size: 12px; font-weight: 500; color: var(--text-muted);">Google Drive</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S8: Level 2 Prompt — headers NOT highlighted -->
+  <div class="slide" data-chapter="Level 2: MAKE" data-accent="var(--accent-make)">
+    <div class="slide-inner" style="gap: 16px;">
+      <div class="label accent anim-up d1">Level 2 — Folder Instructions</div>
+      <div class="prompt-block wide anim-scale d2">
+        <div class="prompt-header">claude.md — Level 2</div>
+        <pre><span class="pk">ROLE:</span> You are a post-meeting processing assistant. You handle
+all follow-up work from client meetings so nothing falls through
+the cracks.
+
+<span class="pk">TASK:</span> When a meeting transcript is added to this folder:
+
+<span class="pk">1. ATTENDEES:</span> Check Google Calendar for the meeting. Pull attendee
+   names and email addresses.
+
+<span class="pk">2. FOLLOW-UP EMAIL:</span> Draft a follow-up email as a markdown file.
+   <span class="pc">-</span> Tone: Warm, professional, concise
+   <span class="pc">-</span> Structure: Thank them, summarize key decisions, list next
+     steps with owners, close with clear next action
+   <span class="pc">-</span> Writing level: <span class="ph">5th grade reading level</span>, short sentences
+   <span class="pc">-</span> Include a "To:" line at the top with attendee emails
+   <span class="pc">-</span> Save as follow-up-email.md in this folder
+
+<span class="pk">3. ACTION ITEMS:</span> Create an Excel spreadsheet (.xlsx)
+   <span class="pc">-</span> Columns: Action Item | Owner | Deadline | Status | Notes
+   <span class="pc">-</span> Status column: Dropdown with "Not Started / In Progress / Done"
+   <span class="pc">-</span> Add conditional formatting: <span class="ph">red if past deadline, green if done</span>
+   <span class="pc">-</span> Include a summary row with total count by status
+
+<span class="pk">4. EXECUTIVE SUMMARY:</span> Create a one-page PDF
+   <span class="pc">-</span> Sections: Key Decisions, Open Questions, Action Items,
+     Next Meeting Agenda Items
+   <span class="pc">-</span> <span class="ph">Only include information explicitly stated in the transcript</span>
+
+<span class="pk">CONSTRAINTS:</span>
+<span class="pc">-</span> Base ALL content strictly on the transcript. <span class="ph">Do not infer or
+  fabricate any details</span> not explicitly discussed.
+<span class="pc">-</span> If a deadline wasn't specified, mark as "TBD" — do not guess.
+<span class="pc">-</span> <span class="ph">Run the email draft, spreadsheet, and summary in parallel
+  using sub-agents</span> since they don't depend on each other.</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- S9: Sub-Agents — simpler language -->
+  <div class="slide" data-chapter="Level 2: MAKE" data-accent="var(--accent-make)">
+    <div class="slide-inner">
+      <div class="label accent anim-up d1">Sub-Agents</div>
+      <h1 class="headline headline-sm anim-up d2" style="text-align:center;">Multiple tasks. All at once.</h1>
+
+      <div class="anim-up d3" style="display: flex; flex-direction: column; align-items: center; gap: 0; width: 100%; max-width: 700px;">
+        <!-- Parent -->
+        <div style="display: flex; align-items: center; gap: 12px; padding: 16px 28px; background: var(--bg-card); border: 2px solid var(--current-accent); border-radius: 12px; z-index: 2;">
+          <div style="width: 36px; height: 36px; border-radius: 50%; background: color-mix(in srgb, var(--current-accent) 15%, var(--bg)); border: 1px solid color-mix(in srgb, var(--current-accent) 30%, transparent); display: flex; align-items: center; justify-content: center; "><img src="claude.png" alt="Claude" style="width: 24px; height: 24px; object-fit: contain;"></div>
+          <div>
+            <div style="font-family: var(--font-body); font-size: 14px; font-weight: 600; color: var(--current-accent);">Parent Agent</div>
+            <div style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);">Reads transcript → delegates</div>
+          </div>
+        </div>
+
+        <!-- Connector -->
+        <svg viewBox="0 0 600 48" width="600" height="48" style="overflow: visible;">
+          <line x1="300" y1="0" x2="300" y2="22" stroke="var(--text-dim)" stroke-width="1"/>
+          <line x1="100" y1="22" x2="500" y2="22" stroke="var(--text-dim)" stroke-width="1"/>
+          <line x1="100" y1="22" x2="100" y2="48" stroke="var(--text-dim)" stroke-width="1"/>
+          <line x1="300" y1="22" x2="300" y2="48" stroke="var(--text-dim)" stroke-width="1"/>
+          <line x1="500" y1="22" x2="500" y2="48" stroke="var(--text-dim)" stroke-width="1"/>
+        </svg>
+
+        <!-- Children -->
+        <div style="display: flex; gap: 24px; width: 100%; justify-content: center;">
+          <div style="flex: 1; max-width: 190px; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 20px 16px; background: var(--bg-card); border: 1px solid #2a2a2d; border-radius: 10px; text-align: center;">
+            <div style="width: 40px; height: 40px; border-radius: 50%; background: color-mix(in srgb, var(--current-accent) 10%, var(--bg)); border: 1px solid color-mix(in srgb, var(--current-accent) 20%, transparent); display: flex; align-items: center; justify-content: center; font-size: 18px;">✉️</div>
+            <div style="font-size: 14px; font-weight: 500;">Email Agent</div>
+            <div style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);">follow-up-email.md</div>
+          </div>
+          <div style="flex: 1; max-width: 190px; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 20px 16px; background: var(--bg-card); border: 1px solid #2a2a2d; border-radius: 10px; text-align: center;">
+            <div style="width: 40px; height: 40px; border-radius: 50%; background: color-mix(in srgb, var(--current-accent) 10%, var(--bg)); border: 1px solid color-mix(in srgb, var(--current-accent) 20%, transparent); display: flex; align-items: center; justify-content: center; font-size: 18px;">📊</div>
+            <div style="font-size: 14px; font-weight: 500;">Spreadsheet Agent</div>
+            <div style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);">action-items.xlsx</div>
+          </div>
+          <div style="flex: 1; max-width: 190px; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 20px 16px; background: var(--bg-card); border: 1px solid #2a2a2d; border-radius: 10px; text-align: center;">
+            <div style="width: 40px; height: 40px; border-radius: 50%; background: color-mix(in srgb, var(--current-accent) 10%, var(--bg)); border: 1px solid color-mix(in srgb, var(--current-accent) 20%, transparent); display: flex; align-items: center; justify-content: center; font-size: 18px;">📋</div>
+            <div style="font-size: 14px; font-weight: 500;">Summary Agent</div>
+            <div style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);">summary.pdf</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════ -->
+  <!-- CHAPTER: LEVEL 3 — KNOW         -->
+  <!-- ════════════════════════════════ -->
+
+  <!-- S10: Tool vs Asset — clean XY chart -->
+  <div class="slide" data-chapter="Level 3: KNOW" data-accent="var(--accent-know)">
+    <div class="slide-inner" style="gap: 28px;">
+      <div class="label accent anim-up d1">Level 3 — KNOW</div>
+      <h1 class="headline headline-md anim-up d2" style="text-align: center;">From Tool to Asset</h1>
+
+      <div class="anim-fade d3" style="width: 100%; max-width: 660px;">
+        <svg viewBox="0 0 660 340" width="100%" height="340" style="overflow: visible;">
+          <!-- Axes -->
+          <line x1="80" y1="280" x2="620" y2="280" stroke="#2a2a2d" stroke-width="1"/>
+          <line x1="80" y1="280" x2="80" y2="40" stroke="#2a2a2d" stroke-width="1"/>
+          <!-- Grid -->
+          <line x1="80" y1="210" x2="620" y2="210" stroke="#1a1a1d" stroke-width="1" stroke-dasharray="4,8"/>
+          <line x1="80" y1="140" x2="620" y2="140" stroke="#1a1a1d" stroke-width="1" stroke-dasharray="4,8"/>
+
+          <!-- Axis labels — horizontal -->
+          <text x="350" y="312" fill="#5a5650" font-family="Archivo, sans-serif" font-size="12" text-anchor="middle" letter-spacing="0.12em">TIME</text>
+          <text x="80" y="32" fill="#5a5650" font-family="Archivo, sans-serif" font-size="12" text-anchor="middle" letter-spacing="0.12em">VALUE</text>
+
+          <!-- Tool line: flat dashed -->
+          <line x1="100" y1="210" x2="580" y2="185" stroke="#4a4742" stroke-width="1.5" stroke-dasharray="6,6"/>
+
+          <!-- Tool label — right end, clearly below/after line end -->
+          <text x="588" y="182" fill="#5a5650" font-family="Archivo, sans-serif" font-size="13" font-weight="500">Tool</text>
+
+          <!-- Asset curve -->
+          <!-- Starts near tool line, crosses it around x=340, then rises -->
+          <path d="M 100 225 Q 180 222 260 215 Q 320 205 360 185 Q 420 145 480 95 Q 520 65 550 45" fill="none" stroke="var(--accent-know)" stroke-width="2.5" stroke-linecap="round"/>
+
+          <!-- Start dot -->
+          <circle cx="100" cy="225" r="4" fill="var(--accent-know)" opacity="0.4"/>
+          <!-- End dot -->
+          <circle cx="550" cy="45" r="6" fill="var(--accent-know)"/>
+          <circle cx="550" cy="45" r="11" fill="var(--accent-know)" opacity="0.12"/>
+
+          <!-- Asset label — to the right of the end dot, clear of curve -->
+          <text x="572" y="50" fill="var(--accent-know)" font-family="Archivo, sans-serif" font-size="13" font-weight="600" text-anchor="start">Asset</text>
+
+          <!-- Crossing point annotation -->
+          <!-- The curves cross around x=340, y~195 -->
+          <line x1="340" y1="195" x2="340" y2="280" stroke="#3a3a3d" stroke-width="1" stroke-dasharray="3,3"/>
+          <text x="348" y="242" fill="#5a5650" font-family="var(--font-mono), monospace" font-size="11" text-anchor="start">memory.md</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- S11: memory.md -->
+  <div class="slide" data-chapter="Level 3: KNOW" data-accent="var(--accent-know)">
+    <div class="slide-inner">
+      <div class="label accent anim-up d1">The Memory File</div>
+      <h1 class="headline headline-md anim-up d2" style="text-align: center;">
+        <span style="font-family: var(--font-mono); font-size: 38px; font-weight: 400;">memory.md</span>
+      </h1>
+      <div class="memory-visual anim-scale d3">
+        <div class="memory-file">
+          <div class="memory-file-tab">memory.md</div>
+          <div class="memory-entries">
+            <div class="memory-entry">Client prefers bullet points over paragraphs</div>
+            <div class="memory-entry">Budget cycle resets in March — expansion window</div>
+            <div class="memory-entry">Onboarding speed concern raised 2× (Jan 8, Jan 22)</div>
+            <div class="memory-entry new">⚡ Third consecutive session raising onboarding — flag as systemic</div>
+          </div>
+        </div>
+      </div>
+      <div class="subtext anim-up d4" style="font-size: 15px;">A plain text file. You own it completely.</div>
+    </div>
+  </div>
+
+  <!-- S12: Level 3 Prompt -->
+  <div class="slide" data-chapter="Level 3: KNOW" data-accent="var(--accent-know)">
+    <div class="slide-inner" style="gap: 16px;">
+      <div class="label accent anim-up d1">Level 3 — The Addition</div>
+      <div class="prompt-block wide anim-scale d2">
+        <div class="prompt-header">claude.md — Level 3 (added to Level 2)</div>
+        <pre><span class="pk">BEFORE ANYTHING ELSE:</span> Read <span class="ph">memory.md</span> in this folder. This file
+contains accumulated context from previous sessions — client
+preferences, recurring themes, key decisions, and patterns.
+Use this context to inform all outputs. If memory.md does not
+exist yet, create it after completing the tasks below.
+
+<span class="pc">[...Level 2 system prompt stays the same...]</span>
+
+<span class="pk">AFTER COMPLETING ALL TASKS:</span> Update <span class="ph">memory.md</span> with new information
+from this session. Add:
+<span class="pc">-</span> Any new client preferences or communication style notes
+<span class="pc">-</span> Recurring themes (<span class="ph">flag if something has come up 2+ times</span>)
+<span class="pc">-</span> Key decisions made and their context
+<span class="pc">-</span> Patterns across sessions that may need attention
+<span class="pc">-</span> Keep entries concise and information-dense
+<span class="pc">-</span> <span class="ph">Never remove previous entries — only append</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- S13: Week 8 Insight -->
+  <div class="slide" data-chapter="Level 3: KNOW" data-accent="var(--accent-know)">
+    <div class="slide-inner">
+      <div class="label accent anim-up d1">What Week 8 Looks Like</div>
+      <div class="insight-box anim-scale d2">
+        <div class="insight-quote">
+          "This is the <span class="ph">third consecutive session</span> where the client has raised concerns about onboarding speed. Based on the pattern, this appears to be <span class="ph">systemic rather than situational</span>. Recommend dedicating a meeting specifically to onboarding process review.<br><br>Also noting: their <span class="ph">budget cycle resets in March</span> based on the January 15th session — this may be a window for the <span class="ph">expansion proposal</span>."
+        </div>
+        <div class="insight-source">— Generated by CoWork from memory.md context</div>
+      </div>
+      <div class="subtext anim-up d3" style="font-size: 15px; margin-top: 4px;">
+        Not from today's transcript — from <span class="accent">eight weeks of memory</span>.
+      </div>
+    </div>
+  </div>
+
+  <!-- S14: Amplified Version — shorter title -->
+  <div class="slide" data-chapter="Level 3: KNOW" data-accent="var(--accent-know)">
+    <div class="slide-inner">
+      <div class="label accent anim-up d1">The Full Picture</div>
+      <h1 class="headline headline-md anim-up d2" style="text-align: center; max-width: 500px;">That was the simple version. Now layer in:</h1>
+      <div style="display: flex; flex-direction: column; gap: 14px; max-width: 480px; width: 100%;" class="anim-up d3">
+        <div class="flow-box" style="text-align: left; display: flex; align-items: center; gap: 14px; padding: 14px 22px;">
+          <img src="gmail.png" alt="Gmail" style="width: 24px; height: 24px; object-fit: contain;">
+          <span style="font-size: 15px;">Recent emails with this client</span>
+        </div>
+        <div class="flow-box" style="text-align: left; display: flex; align-items: center; gap: 14px; padding: 14px 22px;">
+          <img src="hubspot.png" alt="HubSpot" style="width: 24px; height: 24px; object-fit: contain;">
+          <span style="font-size: 15px;">CRM updates since last session</span>
+        </div>
+        <div class="flow-box" style="text-align: left; display: flex; align-items: center; gap: 14px; padding: 14px 22px;">
+          <img src="G-drive.png" alt="Google Drive" style="width: 24px; height: 24px; object-fit: contain;">
+          <span style="font-size: 15px;">Proposals and docs from Google Drive</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════ -->
+  <!-- CHAPTER: RECAP                  -->
+  <!-- ════════════════════════════════ -->
+
+  <!-- S15: Recap — uniform sizing, perfect alignment -->
+  <div class="slide" data-chapter="Recap" data-accent="var(--accent-recap)">
+    <div class="slide-inner" style="gap: 28px;">
+      <div class="label accent anim-up d1">Recap</div>
+
+      <div class="recap-stack anim-up d2">
+        <!-- DO -->
+        <div class="recap-card" style="border-color: color-mix(in srgb, var(--accent-do) 25%, #2a2a2d);">
+          <div class="recap-card-accent" style="background: var(--accent-do);"></div>
+          <div class="recap-card-body">
+            <div class="recap-num-name">
+              <div class="recap-num" style="color: var(--accent-do);">1</div>
+              <div class="recap-name">DO</div>
+            </div>
+            <div class="recap-divider"></div>
+            <div class="recap-text">
+              <div class="recap-key">Tell AI → It acts</div>
+              <div class="recap-detail">claude.md makes any task repeatable</div>
+            </div>
+            <div class="recap-bar-zone">
+              <div class="recap-bar-track">
+                <div class="recap-bar-fill" style="width: 28%; background: var(--accent-do);"></div>
+              </div>
+              <div class="recap-bar-label" style="color: var(--accent-do);">Leverage</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MAKE -->
+        <div class="recap-card" style="border-color: color-mix(in srgb, var(--accent-make) 25%, #2a2a2d);">
+          <div class="recap-card-accent" style="background: var(--accent-make);"></div>
+          <div class="recap-card-body">
+            <div class="recap-num-name">
+              <div class="recap-num" style="color: var(--accent-make);">2</div>
+              <div class="recap-name">MAKE</div>
+            </div>
+            <div class="recap-divider"></div>
+            <div class="recap-text">
+              <div class="recap-key">One input → Multiple deliverables</div>
+              <div class="recap-detail">Sub-agents across connected systems</div>
+            </div>
+            <div class="recap-bar-zone">
+              <div class="recap-bar-track">
+                <div class="recap-bar-fill" style="width: 58%; background: var(--accent-make);"></div>
+              </div>
+              <div class="recap-bar-label" style="color: var(--accent-make);">Leverage</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- KNOW -->
+        <div class="recap-card" style="border-color: color-mix(in srgb, var(--accent-know) 30%, #2a2a2d);">
+          <div class="recap-card-accent" style="background: var(--accent-know);"></div>
+          <div class="recap-card-body">
+            <div class="recap-num-name">
+              <div class="recap-num" style="color: var(--accent-know);">3</div>
+              <div class="recap-name">KNOW</div>
+            </div>
+            <div class="recap-divider"></div>
+            <div class="recap-text">
+              <div class="recap-key">Memory compounds → Outputs sharpen</div>
+              <div class="recap-detail">memory.md turns a tool into an asset</div>
+            </div>
+            <div class="recap-bar-zone">
+              <div class="recap-bar-track">
+                <div class="recap-bar-fill" style="width: 95%; background: linear-gradient(90deg, var(--accent-know), color-mix(in srgb, var(--accent-know) 70%, white));"></div>
+              </div>
+              <div class="recap-bar-label" style="color: var(--accent-know);">Leverage</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  var slides = document.querySelectorAll('.slide');
+  var totalEl = document.getElementById('totalSlides');
+  var currentEl = document.getElementById('currentSlide');
+  var navSidebar = document.getElementById('navSidebar');
+  var current = 0;
+
+  totalEl.textContent = slides.length;
+
+  var chapters = [];
+  var chapterSlideMap = {};
+  for (var i = 0; i < slides.length; i++) {
+    var ch = slides[i].dataset.chapter;
+    if (!chapterSlideMap.hasOwnProperty(ch)) {
+      chapterSlideMap[ch] = i;
+      chapters.push(ch);
+    }
+  }
+
+  for (var c = 0; c < chapters.length; c++) {
+    var item = document.createElement('div');
+    item.className = 'nav-item';
+    item.innerHTML = '<div class="nav-dot"></div><div class="nav-label">' + chapters[c] + '</div>';
+    (function(idx) {
+      item.addEventListener('click', function() { goTo(chapterSlideMap[chapters[idx]]); });
+    })(c);
+    navSidebar.appendChild(item);
+  }
+
+  function getChapterForSlide(idx) {
+    return slides[idx] ? slides[idx].dataset.chapter : '';
+  }
+
+  function updateNav() {
+    var currentChapter = getChapterForSlide(current);
+    var navItems = navSidebar.querySelectorAll('.nav-item');
+    var foundCurrent = false;
+    for (var i = 0; i < navItems.length; i++) {
+      navItems[i].classList.remove('active', 'visited');
+      if (chapters[i] === currentChapter) {
+        navItems[i].classList.add('active');
+        foundCurrent = true;
+      } else if (!foundCurrent) {
+        navItems[i].classList.add('visited');
+      }
+    }
+  }
+
+  function updateAccent() {
+    var accent = slides[current] ? slides[current].dataset.accent : null;
+    if (accent) document.documentElement.style.setProperty('--current-accent', accent);
+  }
+
+  function goTo(idx) {
+    if (idx < 0 || idx >= slides.length) return;
+    slides[current].classList.remove('active');
+    var anims = slides[current].querySelectorAll('.anim-up, .anim-fade, .anim-scale');
+    for (var i = 0; i < anims.length; i++) {
+      anims[i].style.animation = 'none';
+      anims[i].offsetHeight;
+      anims[i].style.animation = '';
+    }
+    current = idx;
+    slides[current].classList.add('active');
+    currentEl.textContent = current + 1;
+    updateNav();
+    updateAccent();
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+      e.preventDefault(); goTo(current + 1);
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault(); goTo(current - 1);
+    } else if (e.key === 'Home') {
+      e.preventDefault(); goTo(0);
+    } else if (e.key === 'End') {
+      e.preventDefault(); goTo(slides.length - 1);
+    }
+  });
+
+  // Touch swipe support
+  var touchStartX = 0;
+  var touchStartY = 0;
+  var touchStartTime = 0;
+
+  document.addEventListener('touchstart', function(e) {
+    touchStartX = e.changedTouches[0].clientX;
+    touchStartY = e.changedTouches[0].clientY;
+    touchStartTime = Date.now();
+  }, { passive: true });
+
+  document.addEventListener('touchend', function(e) {
+    var dx = e.changedTouches[0].clientX - touchStartX;
+    var dy = e.changedTouches[0].clientY - touchStartY;
+    var dt = Date.now() - touchStartTime;
+
+    // Only register as swipe if horizontal distance > 50px,
+    // more horizontal than vertical, and under 500ms
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) && dt < 500) {
+      if (dx < 0) {
+        goTo(current + 1); // swipe left → next slide
+      } else {
+        goTo(current - 1); // swipe right → previous slide
+      }
+    }
+  }, { passive: true });
+
+  goTo(0);
+})();
+</script>
+
+</body>
+</html>

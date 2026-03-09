@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Session 4 — Stress-Test Your Thinking</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #0a0a0b;
+    --bg-secondary: #111113;
+    --bg-card: #18181b;
+    --text-primary: #f0ede8;
+    --text-secondary: #8a8a8d;
+    --text-dim: #555558;
+    --accent-1: #10b981;
+    --accent-2: #3b82f6;
+    --accent-3: #f59e0b;
+    --accent-4: #ef4444;
+    --accent-recap: #a855f7;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    cursor: default;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 10000;
+  }
+
+  .slide-counter {
+    position: fixed;
+    top: 32px;
+    right: 40px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--text-dim);
+    z-index: 1000;
+    letter-spacing: 2px;
+  }
+
+  .chapter-nav {
+    position: fixed;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1000;
+    padding: 20px 0 20px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .chapter-nav .chapter-item {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11.5px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    padding: 6px 0;
+    position: relative;
+    padding-left: 20px;
+    white-space: nowrap;
+  }
+
+  .chapter-nav .chapter-item::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 50%; transform: translateY(-50%);
+    width: 8px; height: 1px;
+    background: var(--text-dim);
+    transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .chapter-nav .chapter-item.active { color: var(--text-primary); }
+  .chapter-nav .chapter-item.active::before { width: 20px; background: var(--text-primary); }
+  .chapter-nav .chapter-item.past { color: var(--text-secondary); }
+  .chapter-nav .chapter-item.past::before { background: var(--text-secondary); }
+
+  .step-letter-item { display: flex; align-items: center; gap: 0; }
+  .step-letter-item .ch-letter { font-family: 'Syne', sans-serif; font-weight: 700; }
+  .step-letter-item .ch-word {
+    max-width: 0; overflow: hidden; opacity: 0; white-space: nowrap; margin-left: 0;
+    transition: max-width 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease, margin-left 0.3s ease;
+  }
+  .step-letter-item:hover .ch-word,
+  .step-letter-item.active .ch-word,
+  .step-letter-item.past .ch-word { max-width: 160px; opacity: 1; margin-left: 6px; }
+
+  .step-letter-item[data-chapter="frame"] .ch-letter { color: var(--accent-1); opacity: 0.4; }
+  .step-letter-item[data-chapter="ask"] .ch-letter { color: var(--accent-2); opacity: 0.4; }
+  .step-letter-item[data-chapter="critic"] .ch-letter { color: var(--accent-3); opacity: 0.4; }
+  .step-letter-item.active .ch-letter, .step-letter-item.past .ch-letter { opacity: 1; }
+
+  .progress-bar {
+    position: fixed; bottom: 0; left: 0; height: 2px;
+    background: var(--text-dim);
+    transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    z-index: 1000;
+  }
+
+  .slides-container { width: 100%; height: 100vh; position: relative; }
+
+  .slide {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none; padding: 60px 200px;
+  }
+  .slide.active { opacity: 1; pointer-events: all; }
+  .slide .content { width: 100%; max-width: 1100px; text-align: center; }
+
+  h1, h2, h3 { font-family: 'Syne', sans-serif; }
+
+  .slide-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    letter-spacing: 4px; text-transform: uppercase; margin-bottom: 28px; opacity: 0.5;
+  }
+
+  .headline {
+    font-family: 'Syne', sans-serif; font-size: 52px; font-weight: 700;
+    line-height: 1.15; margin-bottom: 24px; letter-spacing: -1px;
+  }
+
+  .subtext {
+    font-size: 20px; color: var(--text-secondary); line-height: 1.6;
+    max-width: 700px; margin: 0 auto; font-weight: 300;
+  }
+
+  .accent-1 { color: var(--accent-1); }
+  .accent-2 { color: var(--accent-2); }
+  .accent-3 { color: var(--accent-3); }
+  .accent-4 { color: var(--accent-4); }
+  .accent-recap { color: var(--accent-recap); }
+
+  /* Prompt box */
+  .prompt-box {
+    background: var(--bg-card); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 16px; padding: 40px 48px; text-align: left;
+    margin-top: 32px; position: relative; overflow: hidden;
+  }
+  .prompt-box::before { content: ''; position: absolute; top: 0; left: 0; bottom: 0; width: 3px; }
+  .prompt-box.green::before { background: var(--accent-1); }
+  .prompt-box.blue::before { background: var(--accent-2); }
+  .prompt-box.amber::before { background: var(--accent-3); }
+  .prompt-box.red::before { background: var(--accent-4); }
+
+  .prompt-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    letter-spacing: 3px; text-transform: uppercase; margin-bottom: 20px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .prompt-label .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+  .bg-green { background: var(--accent-1); }
+  .bg-blue { background: var(--accent-2); }
+  .bg-amber { background: var(--accent-3); }
+  .bg-red { background: var(--accent-4); }
+
+  .prompt-text {
+    font-family: 'DM Sans', sans-serif; font-size: 18px; line-height: 1.75;
+    color: var(--text-primary); font-weight: 400; font-style: italic;
+  }
+  .prompt-text-sm { font-size: 15.5px; line-height: 1.7; }
+
+  .hl { padding: 1px 6px; border-radius: 4px; font-style: italic; }
+  .hl-green { background: rgba(16,185,129,0.12); color: var(--accent-1); }
+  .hl-blue { background: rgba(59,130,246,0.12); color: var(--accent-2); }
+  .hl-amber { background: rgba(245,158,11,0.12); color: var(--accent-3); }
+  .hl-red { background: rgba(239,68,68,0.12); color: var(--accent-4); }
+
+  /* Callout badge */
+  .callout-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 8px; padding: 8px 14px; font-size: 12px;
+    color: var(--text-secondary); font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.5px; margin-top: 16px;
+  }
+  .callout-badge strong { color: var(--text-primary); font-weight: 500; }
+
+  /* Session arc */
+  .arc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 48px; }
+  .arc-card {
+    background: var(--bg-card); border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 14px; padding: 28px 18px; text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .arc-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--text-dim); }
+  .arc-card.current::before { background: var(--accent-4); }
+  .arc-card.current { border-color: rgba(239,68,68,0.2); }
+  .arc-num {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 2px;
+    color: var(--text-dim); margin-bottom: 10px;
+  }
+  .arc-card.current .arc-num { color: var(--accent-4); }
+  .arc-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+  .arc-card.current .arc-title { color: var(--text-primary); }
+  .arc-card:not(.current) .arc-title { color: var(--text-secondary); }
+  .arc-desc { font-size: 13px; color: var(--text-dim); line-height: 1.4; }
+  .arc-card.current .arc-desc { color: var(--text-secondary); }
+
+  /* Feedback gap */
+  .gap-visual { display: flex; align-items: center; justify-content: center; gap: 60px; margin-top: 48px; }
+  .gap-bubble {
+    background: var(--bg-card); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 16px; padding: 28px 36px; max-width: 340px;
+    font-size: 18px; line-height: 1.6; text-align: center; position: relative;
+  }
+  .gap-bubble::after {
+    content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%);
+    width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent;
+    border-top: 10px solid var(--bg-card);
+  }
+  .gap-bubble.bad { border-color: rgba(239,68,68,0.3); }
+  .gap-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 3px;
+    text-transform: uppercase; color: var(--text-dim); margin-top: 16px;
+  }
+
+  /* Insight visual */
+  .insight-visual { display: flex; align-items: center; justify-content: center; gap: 60px; margin-top: 48px; }
+  .insight-box { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  .insight-circle {
+    width: 130px; height: 130px; border-radius: 50%; display: flex;
+    align-items: center; justify-content: center; font-size: 44px;
+  }
+  .insight-circle.you { background: rgba(16,185,129,0.1); border: 2px solid var(--accent-1); }
+  .insight-circle.them { background: rgba(255,255,255,0.03); border: 2px dashed var(--text-dim); }
+  .insight-label { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 600; }
+  .insight-sublabel { font-size: 13px; color: var(--text-dim); }
+
+  /* Alt tags */
+  .alt-tags { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; margin-top: 28px; }
+  .alt-tag {
+    background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2);
+    border-radius: 8px; padding: 12px 18px; font-size: 14px; color: var(--text-secondary);
+    line-height: 1.4; max-width: 360px;
+  }
+
+  /* Questions grid */
+  .questions-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;
+    margin-top: 36px; max-width: 900px; margin-left: auto; margin-right: auto;
+  }
+  .question-card {
+    background: var(--bg-card); border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 12px; padding: 22px 24px; display: flex; align-items: flex-start;
+    gap: 14px; text-align: left; transition: all 0.3s ease;
+  }
+  .question-card:hover { border-color: rgba(59,130,246,0.3); transform: translateY(-2px); }
+  .question-num {
+    font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700;
+    color: var(--accent-2); line-height: 1; min-width: 28px;
+  }
+  .question-text { font-size: 15px; line-height: 1.5; color: var(--text-secondary); }
+
+  /* Honesty visual */
+  .honesty-visual { display: flex; align-items: center; justify-content: center; gap: 48px; margin-top: 48px; }
+  .honesty-stage {
+    display: flex; flex-direction: column; align-items: center; gap: 14px;
+    padding: 28px 36px; background: var(--bg-card); border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.05); min-width: 180px;
+  }
+  .honesty-stage.after { border-color: rgba(59,130,246,0.3); box-shadow: 0 0 30px rgba(59,130,246,0.1); }
+  .stage-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--text-dim);
+  }
+  .meter-track { width: 100px; height: 10px; background: rgba(255,255,255,0.06); border-radius: 5px; overflow: hidden; }
+  .meter-fill { height: 100%; border-radius: 5px; }
+  .meter-fill.fill-70 { width: 70%; background: var(--text-dim); }
+  .meter-fill.fill-100 { width: 100%; background: linear-gradient(90deg, var(--accent-2), #818cf8); }
+  .meter-value { font-family: 'Syne', sans-serif; font-size: 36px; font-weight: 700; }
+  .stage-note { font-size: 13px; color: var(--text-dim); }
+  .critique-arrow { font-size: 28px; color: var(--text-dim); display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .critique-arrow-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--accent-2); }
+
+  /* Intensity stack */
+  .intensity-stack { display: flex; flex-direction: column; gap: 16px; margin-top: 32px; max-width: 900px; margin-left: auto; margin-right: auto; }
+  .intensity-row {
+    display: flex; align-items: center; gap: 20px; padding: 20px 28px;
+    background: var(--bg-card); border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.04); position: relative; overflow: hidden;
+  }
+  .intensity-row::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; border-radius: 4px 0 0 4px; }
+  .intensity-row:nth-child(1)::before { background: rgba(245,158,11,0.5); }
+  .intensity-row:nth-child(2)::before { background: rgba(245,158,11,0.75); }
+  .intensity-row:nth-child(3)::before { background: var(--accent-3); }
+  .intensity-num { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 800; min-width: 44px; text-align: center; color: var(--accent-3); }
+  .intensity-info { text-align: left; flex: 1; }
+  .intensity-name { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 1px; color: var(--accent-3); }
+  .intensity-desc { font-size: 15px; color: var(--text-secondary); line-height: 1.5; font-style: italic; }
+
+  /* Breakout steps */
+  .breakout-steps { display: flex; flex-direction: column; gap: 14px; margin-top: 36px; max-width: 860px; margin-left: auto; margin-right: auto; }
+  .breakout-step {
+    display: flex; align-items: flex-start; gap: 20px; padding: 20px 24px;
+    background: var(--bg-card); border-radius: 14px; border: 1px solid rgba(255,255,255,0.04);
+    text-align: left;
+  }
+  .breakout-num {
+    font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800;
+    min-width: 40px; text-align: center; line-height: 1;
+  }
+  .breakout-info { flex: 1; }
+  .breakout-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .breakout-desc { font-size: 13.5px; color: var(--text-secondary); line-height: 1.5; }
+  .breakout-time {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 1px;
+    color: var(--text-dim); padding: 4px 10px; background: rgba(255,255,255,0.03);
+    border-radius: 6px; white-space: nowrap; align-self: center;
+  }
+
+  /* Recap cards */
+  .recap-flow { display: flex; align-items: stretch; justify-content: center; gap: 16px; margin-top: 48px; }
+  .recap-step {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 10px; padding: 30px 24px; border-radius: 14px; width: 260px;
+    border: 1px solid rgba(255,255,255,0.05); background: var(--bg-card);
+  }
+  .recap-step .r-num { font-family: 'Syne', sans-serif; font-size: 44px; font-weight: 800; }
+  .recap-step .r-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; }
+  .recap-step .r-action { font-size: 13px; color: var(--text-secondary); text-align: center; line-height: 1.5; margin-top: 2px; }
+  .recap-connector { color: var(--text-dim); font-size: 20px; display: flex; align-items: center; }
+
+  /* Thread indicator */
+  .thread-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px; padding: 6px 14px; font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 1px; color: var(--text-dim); margin-top: 20px;
+  }
+  .thread-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+  /* Animation */
+  .slide.active .fade-up { animation: fadeUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+
+  /* Teaser row animation */
+  .intensity-row-teaser {
+    background: linear-gradient(135deg, var(--bg-card) 0%, rgba(245,158,11,0.06) 100%);
+    border: 1px solid rgba(245,158,11,0.15);
+    transition: all 0.4s ease;
+  }
+  .slide.active .intensity-row-teaser {
+    animation: fadeUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.3s forwards, teaserGlow 2s ease-in-out 1.2s infinite;
+  }
+  .teaser-arrow {
+    font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 700;
+    color: var(--accent-3); opacity: 0;
+    animation: none;
+  }
+  .slide.active .teaser-arrow {
+    animation: arrowPulse 1.5s ease-in-out 1.4s infinite;
+  }
+  @keyframes teaserGlow {
+    0%, 100% { border-color: rgba(245,158,11,0.15); box-shadow: 0 0 0px rgba(245,158,11,0); }
+    50% { border-color: rgba(245,158,11,0.4); box-shadow: 0 0 24px rgba(245,158,11,0.1); }
+  }
+  @keyframes arrowPulse {
+    0%, 100% { opacity: 0.3; transform: translateX(0); }
+    50% { opacity: 1; transform: translateX(6px); }
+  }
+  .slide.active .fade-up-d1 { animation-delay: 0.1s; }
+  .slide.active .fade-up-d2 { animation-delay: 0.2s; }
+  .slide.active .fade-up-d3 { animation-delay: 0.3s; }
+  .slide.active .fade-up-d4 { animation-delay: 0.4s; }
+  .fade-up { opacity: 0; transform: translateY(20px); }
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+
+<div class="slide-counter" id="slideCounter">1 / 14</div>
+<div class="progress-bar" id="progressBar"></div>
+
+<nav class="chapter-nav" id="chapterNav">
+  <div class="chapter-item" data-chapter="intro" onclick="goToChapter('intro')">The Arc</div>
+  <div class="chapter-item" data-chapter="problem" onclick="goToChapter('problem')">The Problem</div>
+  <div class="chapter-item step-letter-item" data-chapter="frame" onclick="goToChapter('frame')"><span class="ch-letter">1</span><span class="ch-word">Frame It</span></div>
+  <div class="chapter-item step-letter-item" data-chapter="ask" onclick="goToChapter('ask')"><span class="ch-letter">2</span><span class="ch-word">Target Questions</span></div>
+  <div class="chapter-item step-letter-item" data-chapter="critic" onclick="goToChapter('critic')"><span class="ch-letter">3</span><span class="ch-word">Critic Persona</span></div>
+  <div class="chapter-item" data-chapter="breakout" onclick="goToChapter('breakout')">Breakout</div>
+  <div class="chapter-item" data-chapter="recap" onclick="goToChapter('recap')">Recap</div>
+</nav>
+
+<div class="slides-container">
+
+<!-- ===== TITLE ===== -->
+
+<div class="slide active" data-chapter="intro">
+  <div class="content">
+    <div class="slide-label fade-up" style="color: var(--text-dim);">Session 4</div>
+    <div class="headline fade-up fade-up-d1" style="font-size: 56px;">Stress-Test Your<br><span class="accent-4">Thinking</span></div>
+    <div class="subtext fade-up fade-up-d2">Make AI argue against you — before someone else does.</div>
+  </div>
+</div>
+
+<!-- ===== THE ARC ===== -->
+
+<div class="slide" data-chapter="intro">
+  <div class="content">
+    <div class="slide-label fade-up" style="color: var(--text-dim);">The Arc</div>
+    <div class="headline fade-up fade-up-d1" style="font-size: 38px;">Four Sessions, Four Skills</div>
+    <div class="arc-grid fade-up fade-up-d2">
+      <div class="arc-card">
+        <div class="arc-num">SESSION 1</div>
+        <div class="arc-title">Better Prompts</div>
+        <div class="arc-desc">How to talk to AI</div>
+      </div>
+      <div class="arc-card">
+        <div class="arc-num">SESSION 2</div>
+        <div class="arc-title">Projects</div>
+        <div class="arc-desc">How to give AI lasting context</div>
+      </div>
+      <div class="arc-card">
+        <div class="arc-num">SESSION 3</div>
+        <div class="arc-title">Interviews</div>
+        <div class="arc-desc">How to get AI to pull thinking out of you</div>
+      </div>
+      <div class="arc-card current">
+        <div class="arc-num">SESSION 4</div>
+        <div class="arc-title">Stress-Testing</div>
+        <div class="arc-desc">How to make AI argue against you</div>
+      </div>
+    </div>
+    <div class="subtext fade-up fade-up-d3" style="margin-top: 32px; font-size: 17px;">You know how to build your argument. Now <span class="accent-4">break it</span>.</div>
+  </div>
+</div>
+
+<!-- ===== THE PROBLEM ===== -->
+
+<div class="slide" data-chapter="problem">
+  <div class="content">
+    <div class="slide-label fade-up accent-4">The Problem</div>
+    <div class="headline fade-up fade-up-d1">The Feedback <span class="accent-4">Gap</span></div>
+    <div class="gap-visual fade-up fade-up-d2">
+      <div>
+        <div class="gap-bubble">"What do you think of this plan?"</div>
+        <div class="gap-label">What you ask</div>
+      </div>
+      <div style="font-size: 32px; color: var(--text-dim);">→</div>
+      <div>
+        <div class="gap-bubble bad">"This has strong potential! Here's how to make it even better..."</div>
+        <div class="gap-label"><span class="accent-4">What you get</span></div>
+      </div>
+    </div>
+    <div class="subtext fade-up fade-up-d3" style="margin-top: 32px; font-size: 17px;">AI defaults to agreeing with you. You have to override that.</div>
+  </div>
+</div>
+
+<!-- ===== STEP 1: FRAME — Concept ===== -->
+
+<div class="slide" data-chapter="frame">
+  <div class="content">
+    <div class="slide-label fade-up accent-1">Step 1 · Frame</div>
+    <div class="headline fade-up fade-up-d1" style="font-size: 42px;">AI Protects <span class="accent-1">Your</span> Ego</div>
+    <div class="insight-visual fade-up fade-up-d2">
+      <div class="insight-box">
+        <div class="insight-circle you">🛡️</div>
+        <div class="insight-label">Your Idea</div>
+        <div class="insight-sublabel">Protected</div>
+      </div>
+      <div style="font-size: 36px; color: var(--text-dim);">vs</div>
+      <div class="insight-box">
+        <div class="insight-circle them">💭</div>
+        <div class="insight-label">"Coworker's" Idea</div>
+        <div class="insight-sublabel">No loyalty</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== STEP 1: FRAME — Prompts ===== -->
+
+<div class="slide" data-chapter="frame">
+  <div class="content">
+    <div class="slide-label fade-up accent-1">Step 1 · Frame</div>
+    <div class="headline fade-up fade-up-d1" style="font-size: 38px;">The <span class="accent-1">Reframe</span></div>
+    <div class="prompt-box green fade-up fade-up-d2">
+      <div class="prompt-label"><span class="dot bg-green"></span> <span class="accent-1">Prompt</span></div>
+      <div class="prompt-text">A <span class="hl hl-green">coworker</span> has this idea and asked for honest feedback. Help identify the <span class="hl hl-green">weaknesses</span> so they don't waste time on something flawed. Here's the idea:</div>
+    </div>
+    <div class="thread-badge fade-up fade-up-d3"><div class="thread-dot bg-green"></div> Same conversation → continue to Step 2</div>
+  </div>
+</div>
+
+<!-- ===== STEP 2: ASK — Questions ===== -->
+
+<div class="slide" data-chapter="ask">
+  <div class="content">
+    <div class="slide-label fade-up accent-2">Step 2 · Ask Targeted Questions</div>
+    <div class="headline fade-up fade-up-d1" style="font-size: 38px;">Specific Questions Unlock<br><span class="accent-2">Specific Criticism</span></div>
+    <div class="questions-grid fade-up fade-up-d2">
+      <div class="question-card">
+        <div class="question-num">1</div>
+        <div class="question-text">What assumptions here could be wrong?</div>
+      </div>
+      <div class="question-card">
+        <div class="question-num">2</div>
+        <div class="question-text">If this fails in 6 months, what's the most likely reason?</div>
+      </div>
+      <div class="question-card">
+        <div class="question-num">3</div>
+        <div class="question-text">What would a skeptical <strong style="color:var(--accent-2)">[owner / lender / inspector]</strong> say is the biggest risk?</div>
+      </div>
+      <div class="question-card">
+        <div class="question-num">4</div>
+        <div class="question-text">What's the weakest part that's easy to miss?</div>
+      </div>
+    </div>
+    <div class="callout-badge fade-up fade-up-d3"><span class="accent-2">→</span> Pick <strong>2–3</strong> after sharing any plan or idea</div>
+  </div>
+</div>
+
+<!-- ===== STEP 2: ASK — Self-Grade ===== -->
+
+<div class="slide" data-chapter="ask">
+  <div class="content">
+    <div class="slide-label fade-up accent-2">Step 2 · The Finisher</div>
+    <div class="headline fade-up fade-up-d1" style="font-size: 38px;">Make AI <span class="accent-2">Grade Itself</span></div>
+    <div class="subtext fade-up fade-up-d2" style="margin-top: 0; font-size: 16px; opacity: 0.6;">Switches AI from "be helpful" mode → "find problems" mode</div>
+    <div class="prompt-box blue fade-up fade-up-d3" style="margin-top: 28px;">
+      <div class="prompt-label"><span class="dot bg-blue"></span> <span class="accent-2">Prompt</span></div>
+      <div class="prompt-text prompt-text-sm">"Analyze that response. Rate it from <span class="hl hl-blue">1 to 100</span> for how genuinely critical and useful it was. Identify the <span class="hl hl-blue">three weakest points</span>, then <span class="hl hl-blue">rewrite</span> the feedback fixing those weaknesses."</div>
+    </div>
+    <div class="thread-badge fade-up fade-up-d4"><div class="thread-dot bg-blue"></div> Take your improved argument → new conversation for Step 3</div>
+  </div>
+</div>
+
+<!-- ===== STEP 3: CRITIC — Overview ===== -->
+
+<div class="slide" data-chapter="critic">
+  <div class="content">
+    <div class="slide-label fade-up accent-3">Step 3 · Critic Persona</div>
+    <div class="headline fade-up fade-up-d1" style="font-size: 38px;">Give AI a Job Where<br><span class="accent-3">Finding Problems</span> Is the Point</div>
+    <div class="intensity-stack fade-up fade-up-d2">
+      <div class="intensity-row">
+        <div class="intensity-num">1</div>
+        <div class="intensity-info">
+          <div class="intensity-name">Devil's Advocate</div>
+          <div class="intensity-desc">"Challenge this plan by pointing out flaws, bad assumptions, and what I'm missing."</div>
+        </div>
+      </div>
+      <div class="intensity-row">
+        <div class="intensity-num">2</div>
+        <div class="intensity-info">
+          <div class="intensity-name">Red Team</div>
+          <div class="intensity-desc">"Act as a red team reviewer. Hunt for every weakness, loophole, and risk. Expose what isn't good enough."</div>
+        </div>
+      </div>
+      <div class="intensity-row intensity-row-teaser fade-up fade-up-d3" style="cursor: default; border-color: rgba(245,158,11,0.25); position: relative; overflow: visible;">
+        <div class="intensity-num" style="font-size: 36px;">3</div>
+        <div class="intensity-info">
+          <div class="intensity-name" style="font-size: 18px;">Skeptical Persona</div>
+          <div class="intensity-desc" style="font-size: 16px;">The most powerful level. <span style="color: var(--accent-3);">Let's go deeper →</span></div>
+        </div>
+        <div class="teaser-arrow">→</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== STEP 3: CRITIC — Skeptical Persona Detail ===== -->
+
+<div class="slide" data-chapter="critic">
+  <div class="content">
+    <div class="slide-label fade-up accent-3">Step 3 · Level 3</div>
+    <div class="headline fade-up fade-up-d1" style="font-size: 38px;">The <span class="accent-3">Skeptical Persona</span></div>
+    <div class="prompt-box amber fade-up fade-up-d2">
+      <div class="prompt-label"><span class="dot bg-amber"></span> <span class="accent-3">Prompt</span></div>
+      <div class="prompt-text">"You are a skeptical <span class="hl hl-amber">[fill in the blank]</span>. I'm going to share my plan. Your job is to <span class="hl hl-amber">tear it apart</span> — find every weakness, question every assumption, and tell me exactly where this falls short. Don't soften anything. Make your feedback <span class="hl hl-amber">specific and actionable</span>."</div>
+    </div>
+    <div class="thread-badge fade-up fade-up-d3"><div class="thread-dot bg-amber"></div> New conversation · paste your improved argument from Steps 1–2</div>
+  </div>
+</div>
+
+<!-- ===== BREAKOUT ===== -->
+
+<div class="slide" data-chapter="breakout">
+  <div class="content">
+    <div class="slide-label fade-up" style="color: var(--text-dim);">Breakout Exercise</div>
+    <div class="headline fade-up fade-up-d1" style="font-size: 40px;">Your Turn — <span class="accent-4">Stress-Test</span> a Real Scenario</div>
+    <div class="breakout-steps fade-up fade-up-d2">
+      <div class="breakout-step">
+        <div class="breakout-num accent-1">1</div>
+        <div class="breakout-info">
+          <div class="breakout-title" style="color: var(--accent-1);">Frame + Question</div>
+          <div class="breakout-desc">Share your scenario as someone else's idea. Then ask 2–3 targeted questions from the list. <strong style="color: var(--text-primary);">Same conversation.</strong></div>
+        </div>
+        <div class="breakout-time">~20 min</div>
+      </div>
+      <div class="breakout-step">
+        <div class="breakout-num accent-3">2</div>
+        <div class="breakout-info">
+          <div class="breakout-title" style="color: var(--accent-3);">Critic Persona</div>
+          <div class="breakout-desc">Take what you learned, refine your plan. Open a <strong style="color: var(--text-primary);">new conversation</strong>. Hit it with a critic persona — pick the intensity and fill in the blank with whoever you're actually facing.</div>
+        </div>
+        <div class="breakout-time">~15 min</div>
+      </div>
+      <div class="breakout-step">
+        <div class="breakout-num accent-4">3</div>
+        <div class="breakout-info">
+          <div class="breakout-title" style="color: var(--accent-4);">Review</div>
+          <div class="breakout-desc">Write down the top 2–3 things AI surfaced that you hadn't considered. Prepare to share one with the group.</div>
+        </div>
+        <div class="breakout-time">~7 min</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== RECAP ===== -->
+
+<div class="slide" data-chapter="recap">
+  <div class="content">
+    <div class="slide-label fade-up" style="color: var(--text-dim);">Recap</div>
+    <div class="headline fade-up fade-up-d1" style="font-size: 42px;">Three Moves to <span class="accent-recap">Stress-Test</span> Anything</div>
+    <div class="recap-flow fade-up fade-up-d2">
+      <div class="recap-step" style="border-color: rgba(16,185,129,0.15);">
+        <div class="r-num accent-1">1</div>
+        <div class="r-title accent-1">Frame It</div>
+        <div class="r-action">Present as someone else's idea</div>
+      </div>
+      <div class="recap-connector">→</div>
+      <div class="recap-step" style="border-color: rgba(59,130,246,0.15);">
+        <div class="r-num accent-2">2</div>
+        <div class="r-title accent-2">Target Questions</div>
+        <div class="r-action">Specific questions + self-grading</div>
+      </div>
+      <div class="recap-connector">→</div>
+      <div class="recap-step" style="border-color: rgba(245,158,11,0.15);">
+        <div class="r-num accent-3">3</div>
+        <div class="r-title accent-3">Critic Persona</div>
+        <div class="r-action">New thread · skeptical [role]</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const counter = document.getElementById('slideCounter');
+  const progressBar = document.getElementById('progressBar');
+  const chapterItems = document.querySelectorAll('.chapter-item');
+  let currentSlide = 0;
+  const totalSlides = slides.length;
+
+  const chapters = {};
+  slides.forEach((slide, i) => {
+    const ch = slide.dataset.chapter;
+    if (!chapters[ch]) chapters[ch] = { start: i, end: i };
+    else chapters[ch].end = i;
+  });
+
+  function updateSlide() {
+    slides.forEach((s, i) => s.classList.toggle('active', i === currentSlide));
+    counter.textContent = `${currentSlide + 1} / ${totalSlides}`;
+    progressBar.style.width = `${((currentSlide + 1) / totalSlides) * 100}%`;
+
+    const currentChapter = slides[currentSlide].dataset.chapter;
+    const chapterOrder = ['intro', 'problem', 'frame', 'ask', 'critic', 'breakout', 'recap'];
+    const ci = chapterOrder.indexOf(currentChapter);
+
+    chapterItems.forEach(item => {
+      const ii = chapterOrder.indexOf(item.dataset.chapter);
+      item.classList.remove('active', 'past');
+      if (item.dataset.chapter === currentChapter) item.classList.add('active');
+      else if (ii < ci) item.classList.add('past');
+    });
+
+    const colors = { intro:'var(--text-secondary)', problem:'var(--accent-4)', frame:'var(--accent-1)', ask:'var(--accent-2)', critic:'var(--accent-3)', breakout:'var(--accent-4)', recap:'var(--accent-recap)' };
+    progressBar.style.background = colors[currentChapter] || 'var(--text-dim)';
+  }
+
+  function goToChapter(name) {
+    if (chapters[name]) { currentSlide = chapters[name].start; updateSlide(); }
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if ((e.key === 'ArrowRight' || e.key === ' ') && currentSlide < totalSlides - 1) { e.preventDefault(); currentSlide++; updateSlide(); }
+    else if (e.key === 'ArrowLeft' && currentSlide > 0) { e.preventDefault(); currentSlide--; updateSlide(); }
+  });
+
+  updateSlide();
+</script>
+</body>
+</html>

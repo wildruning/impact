@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stop Asking AI Questions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #08080a;
+    --bg-card: #111114;
+    --bg-surface: #18181c;
+    --text-primary: #e8e6e1;
+    --text-secondary: #7a7872;
+    --text-muted: #4a4944;
+    --accent: #c44230;
+    --accent-glow: rgba(196, 66, 48, 0.15);
+    --accent-soft: rgba(196, 66, 48, 0.08);
+    --grid-line: rgba(255,255,255,0.03);
+    --border: rgba(255,255,255,0.06);
+    --transition: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .grid-bg {
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 60px 60px;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .slide-counter {
+    position: fixed;
+    top: 32px;
+    right: 40px;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text-muted);
+    z-index: 100;
+    letter-spacing: 2px;
+  }
+  .slide-counter .current-num { color: var(--text-primary); font-weight: 500; }
+
+  .chapter-nav {
+    position: fixed;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 100;
+    padding: 0 0 0 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .chapter-nav .ch-item {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 7px 14px;
+    cursor: pointer;
+    transition: all 0.4s var(--transition);
+    border-left: 2px solid transparent;
+    white-space: nowrap;
+  }
+  .chapter-nav .ch-item:hover { color: var(--text-secondary); }
+  .chapter-nav .ch-item.active { color: var(--accent); border-left-color: var(--accent); }
+  .chapter-nav .ch-item.passed { color: var(--text-secondary); }
+
+  .slides-container { position: relative; width: 100%; height: 100vh; z-index: 10; }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.6s var(--transition), visibility 0.6s;
+    padding: 60px 200px 60px 220px;
+  }
+  .slide.active { opacity: 1; visibility: visible; }
+
+  .slide-inner { width: 100%; max-width: 1100px; position: relative; }
+
+  .syne { font-family: 'Syne', sans-serif; }
+  .mono { font-family: 'DM Mono', monospace; }
+
+  .headline-xl { font-family: 'Syne', sans-serif; font-size: 72px; font-weight: 800; line-height: 1.0; letter-spacing: -2px; }
+  .headline-lg { font-family: 'Syne', sans-serif; font-size: 52px; font-weight: 700; line-height: 1.1; letter-spacing: -1.5px; }
+  .headline-md { font-family: 'Syne', sans-serif; font-size: 36px; font-weight: 700; line-height: 1.2; letter-spacing: -1px; }
+  .subtitle { font-family: 'DM Sans', sans-serif; font-size: 20px; font-weight: 300; line-height: 1.6; color: var(--text-secondary); }
+  .label { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--text-muted); }
+  .label.accent { color: var(--accent); }
+
+  .accent-text { color: var(--accent); }
+  .muted-text { color: var(--text-secondary); }
+  .dim-text { color: var(--text-muted); }
+
+  .divider { width: 40px; height: 2px; background: var(--accent); margin: 20px 0; }
+
+  /* ── PROMPT DISPLAY ── */
+  .prompt-block {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 32px 36px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16.5px;
+    line-height: 1.85;
+    color: var(--text-secondary);
+    position: relative;
+    overflow: hidden;
+  }
+  .prompt-block::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+    background: var(--accent);
+  }
+  .prompt-block .highlight { color: var(--text-primary); font-weight: 500; }
+  .prompt-block .key-phrase { color: var(--accent); font-weight: 500; }
+  .prompt-block .variable {
+    background: rgba(196, 66, 48, 0.12);
+    color: var(--accent);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  /* ── FILE DISPLAY ── */
+  .file-block {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .file-header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,0.02);
+  }
+  .file-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .file-dot.r { background: #e5534b; opacity: 0.7; }
+  .file-dot.y { background: #c69026; opacity: 0.7; }
+  .file-dot.g { background: #57ab5a; opacity: 0.7; }
+  .file-name { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text-secondary); margin-left: 8px; }
+  .file-body {
+    padding: 24px 28px;
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    line-height: 2;
+    color: var(--text-secondary);
+  }
+  .file-body .cm-key { color: var(--accent); }
+  .file-body .cm-str { color: #8ba578; }
+  .file-body .cm-comment { color: var(--text-muted); font-style: italic; }
+  .file-body .cm-variable {
+    background: rgba(196, 66, 48, 0.12);
+    color: var(--accent);
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+
+  /* ── PHASE TRACK ── */
+  .phase-track { display: flex; align-items: stretch; gap: 0; }
+  .phase-card {
+    flex: 1;
+    padding: 44px 30px 40px;
+    border: 1px solid rgba(196, 66, 48, 0.2);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 14px;
+    position: relative;
+  }
+  .phase-card:first-child { border-radius: 8px 0 0 8px; }
+  .phase-card:last-child { border-radius: 0 8px 8px 0; }
+  .phase-card .phase-num {
+    font-family: 'Syne', sans-serif; font-size: 64px; font-weight: 800;
+    color: var(--text-muted); opacity: 0.12;
+    position: absolute; bottom: 10px; right: 18px; line-height: 1;
+  }
+  .phase-card.active-phase { background: var(--accent-soft); border-color: rgba(196, 66, 48, 0.2); }
+  .phase-card .phase-title { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 700; }
+  .phase-card .phase-desc { font-size: 15px; color: var(--text-secondary); line-height: 1.5; }
+
+  /* ── BAR CHART ── */
+  .bar-chart { display: flex; flex-direction: column; gap: 18px; width: 100%; }
+  .bar-row { display: flex; align-items: center; gap: 16px; }
+  .bar-label { font-family: 'DM Mono', monospace; font-size: 13px; width: 100px; text-align: right; color: var(--text-secondary); flex-shrink: 0; }
+  .bar-track { flex: 1; height: 32px; background: rgba(255,255,255,0.03); border-radius: 4px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; display: flex; align-items: center; padding-left: 12px; }
+  .bar-fill span { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text-primary); opacity: 0.9; }
+  .bar-fill.optimal { background: var(--accent); }
+  .bar-fill.heavy { background: var(--text-muted); opacity: 0.6; }
+
+  /* ── FOLDER TREE ── */
+  .folder-tree { font-family: 'DM Mono', monospace; font-size: 15px; line-height: 2.4; color: var(--text-secondary); padding: 20px 0; }
+  .folder-tree .tree-folder { color: var(--text-primary); font-weight: 500; }
+  .folder-tree .tree-special { color: var(--accent); font-weight: 500; }
+  .folder-tree .tree-generated { color: #8ba578; font-style: italic; }
+  .folder-tree .indent { padding-left: 28px; }
+  .folder-tree .branch { color: var(--text-muted); }
+
+  /* ── WRONG ORDER ── */
+  .wrong-order { display: flex; flex-direction: column; gap: 12px; max-width: 500px; }
+  .order-step { display: flex; align-items: center; gap: 16px; padding: 16px 24px; border-radius: 6px; border: 1px solid var(--border); }
+  .order-step .order-num { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 20px; width: 32px; flex-shrink: 0; }
+  .order-step .order-text { font-size: 15px; color: var(--text-secondary); }
+  .order-step.wrong-step { opacity: 0.4; border-color: transparent; }
+  .order-step.wrong-step .order-num { color: var(--text-muted); }
+  .order-step.right-step { border-color: rgba(196, 66, 48, 0.2); background: var(--accent-soft); }
+  .order-step.right-step .order-num { color: var(--accent); }
+  .order-crossout { position: relative; }
+  .order-crossout::after { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 2px; background: var(--accent); opacity: 0.5; }
+
+  /* ── CIRCULAR LOOP ── */
+  .loop-container { position: relative; width: 520px; height: 480px; margin: 0 auto; }
+  .loop-node {
+    position: absolute;
+    padding: 16px 22px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    text-align: center;
+    background: var(--bg-card);
+    z-index: 2;
+  }
+  .loop-node .loop-icon { font-size: 24px; margin-bottom: 6px; display: block; }
+  .loop-node .loop-label {
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    letter-spacing: 1px; text-transform: uppercase;
+    color: var(--text-secondary); line-height: 1.5;
+  }
+  .loop-node.loop-anchor { border-color: rgba(196, 66, 48, 0.3); background: #15100f; }
+  .loop-svg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; overflow: visible; }
+
+  /* ── DOT UNIVERSE ── */
+  .universe-dot { position: absolute; width: 6px; height: 6px; border-radius: 50%; }
+  .universe-dot.base-dot { background: #6a685f; opacity: 0.35; }
+  .universe-dot.active-dot { background: var(--accent); opacity: 1; box-shadow: 0 0 12px rgba(196, 66, 48, 0.5); }
+  .universe-dot.connected-dot { background: var(--accent); opacity: 0.65; }
+  .lens-circle { position: absolute; border: 1.5px solid var(--accent); border-radius: 50%; opacity: 0.35; }
+  .dot-question-label {
+    position: absolute;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    background: rgba(8,8,10,0.9);
+    padding: 6px 14px;
+    border-radius: 4px;
+    border: 1px solid rgba(196,66,48,0.2);
+    pointer-events: none;
+  }
+  .dot-beam {
+    position: absolute;
+    width: 1.5px;
+    background: var(--accent);
+    opacity: 0.35;
+  }
+
+  /* ── FINAL SLIDE FOCUS SYSTEM ── */
+  .final-section {
+    transition: opacity 0.5s var(--transition);
+  }
+  .final-section.dimmed { opacity: 0.1; }
+  .final-section.focused { opacity: 1; }
+
+  .path-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .path-card {
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 36px 32px; position: relative; overflow: hidden;
+    transition: opacity 0.5s var(--transition), border-color 0.4s var(--transition), background 0.4s var(--transition);
+  }
+  .path-card::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; transition: opacity 0.5s var(--transition); }
+  .path-card.path-quick::after { background: var(--accent); }
+  .path-card.path-deep::after { background: var(--text-primary); }
+  .path-card.focused { border-color: rgba(196, 66, 48, 0.25); background: var(--accent-soft); }
+  .path-card .path-time { font-family: 'Syne', sans-serif; font-size: 36px; font-weight: 800; margin-bottom: 4px; }
+  .path-card .path-name { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 600; margin-bottom: 14px; }
+  .path-card .path-steps { font-size: 14px; color: var(--text-secondary); line-height: 2; }
+  .path-card .path-steps .step-num { color: var(--accent); font-family: 'DM Mono', monospace; font-size: 12px; margin-right: 8px; }
+
+  .recap-strip { display: flex; gap: 16px; margin-top: 36px; }
+  .recap-pill {
+    flex: 1; padding: 24px 22px;
+    border: 1px solid var(--border); border-radius: 8px;
+    position: relative;
+    transition: opacity 0.5s var(--transition), border-color 0.4s var(--transition), background 0.4s var(--transition);
+  }
+  .recap-pill.focused { border-color: rgba(196, 66, 48, 0.25); background: var(--accent-soft); }
+  .recap-pill .rp-num {
+    font-family: 'Syne', sans-serif; font-size: 36px; font-weight: 800;
+    color: var(--accent); opacity: 0.15;
+    position: absolute; top: 8px; right: 14px;
+  }
+  .recap-pill .rp-text { font-size: 15px; line-height: 1.5; color: var(--text-secondary); }
+  .recap-pill .rp-text strong { color: var(--text-primary); font-weight: 600; }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .slide.active .animate-in { animation: fadeUp 0.7s var(--transition) both; }
+  .slide.active .animate-in.d1 { animation-delay: 0.1s; }
+  .slide.active .animate-in.d2 { animation-delay: 0.25s; }
+  .slide.active .animate-in.d3 { animation-delay: 0.4s; }
+
+  @media (max-width: 1400px) {
+    .slide { padding: 50px 140px 50px 200px; }
+    .headline-xl { font-size: 58px; }
+    .headline-lg { font-size: 42px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+
+<div class="slide-counter">
+  <span class="current-num" id="currentSlide">1</span><span> / </span><span id="totalSlides">11</span>
+</div>
+
+<nav class="chapter-nav" id="chapterNav">
+  <div class="ch-item" data-chapter="1" data-slide="0">Intent vs Questions</div>
+  <div class="ch-item" data-chapter="2" data-slide="2">The Framework</div>
+  <div class="ch-item" data-chapter="3" data-slide="4">Method 1 — Chat</div>
+  <div class="ch-item" data-chapter="4" data-slide="7">Method 2 — Folder</div>
+  <div class="ch-item" data-chapter="5" data-slide="10">Start Today</div>
+</nav>
+
+<div class="slides-container" id="slidesContainer">
+
+  <!-- SLIDE 1: Dot Universe — Question -->
+  <div class="slide active" data-chapter="1">
+    <div class="slide-inner" style="display:flex; align-items:center; gap:60px;">
+      <div style="flex:1;">
+        <div class="label accent animate-in" style="margin-bottom:20px;">A Specific Question</div>
+        <div class="headline-lg animate-in d1" style="margin-bottom:24px;">
+          Picks <span class="accent-text">one</span> dot.
+        </div>
+        <div class="divider animate-in d2"></div>
+        <div class="subtitle animate-in d2" style="font-size:17px; max-width:380px;">
+          You get one answer. That's it.
+        </div>
+      </div>
+      <div style="flex:1; display:flex; align-items:center; justify-content:center;" class="animate-in d2">
+        <div style="position:relative; width:380px; height:380px;" id="dotUniverse1"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 2: Dot Universe — Lens -->
+  <div class="slide" data-chapter="1">
+    <div class="slide-inner" style="display:flex; align-items:center; gap:60px;">
+      <div style="flex:1;">
+        <div class="label accent animate-in" style="margin-bottom:20px;">Your Intent</div>
+        <div class="headline-lg animate-in d1" style="margin-bottom:24px;">
+          Gives AI a <span class="accent-text">lens.</span>
+        </div>
+        <div class="divider animate-in d2"></div>
+        <div class="subtitle animate-in d2" style="font-size:17px; max-width:380px;">
+          It connects things you'd never think to connect.
+        </div>
+      </div>
+      <div style="flex:1; display:flex; align-items:center; justify-content:center;" class="animate-in d2">
+        <div style="position:relative; width:380px; height:380px;" id="dotUniverse2"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 3: Framework -->
+  <div class="slide" data-chapter="2">
+    <div class="slide-inner">
+      <div class="label accent animate-in" style="margin-bottom:40px;">The Framework</div>
+      <div class="phase-track animate-in d1">
+        <div class="phase-card">
+          <div class="phase-title">Explore</div>
+          <div class="phase-desc">Share data + intent</div>
+        </div>
+        <div class="phase-card">
+          <div class="phase-title">Discover</div>
+          <div class="phase-desc">Let AI surprise you</div>
+        </div>
+        <div class="phase-card">
+          <div class="phase-title">Constrain</div>
+          <div class="phase-desc">Go deep on surprises</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 4: Most People Start Wrong -->
+  <div class="slide" data-chapter="2">
+    <div class="slide-inner" style="display:flex; align-items:center; gap:80px;">
+      <div style="flex:1;">
+        <div class="label animate-in" style="margin-bottom:20px;">The Mistake</div>
+        <div class="headline-lg animate-in d1">
+          Most people start at<br><span class="accent-text">Phase 3.</span>
+        </div>
+      </div>
+      <div style="flex:1;" class="animate-in d2">
+        <div style="display:flex; gap:32px;">
+          <div class="wrong-order">
+            <div class="label" style="margin-bottom:8px; color:var(--text-muted);">&#10005; &nbsp;Most people</div>
+            <div class="order-step wrong-step order-crossout">
+              <div class="order-num">3</div>
+              <div class="order-text">Ask a specific question</div>
+            </div>
+            <div class="order-step wrong-step order-crossout">
+              <div class="order-num">→</div>
+              <div class="order-text">Hand over data</div>
+            </div>
+            <div class="order-step wrong-step order-crossout">
+              <div class="order-num">→</div>
+              <div class="order-text">Get one answer</div>
+            </div>
+          </div>
+          <div class="wrong-order">
+            <div class="label accent" style="margin-bottom:8px;">&#10003; &nbsp;Better approach</div>
+            <div class="order-step right-step">
+              <div class="order-num">1</div>
+              <div class="order-text">Share data + intent</div>
+            </div>
+            <div class="order-step right-step">
+              <div class="order-num">2</div>
+              <div class="order-text">Let AI surprise you</div>
+            </div>
+            <div class="order-step right-step">
+              <div class="order-num">3</div>
+              <div class="order-text">Go deep on surprises</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 5: File Formats -->
+  <div class="slide" data-chapter="3">
+    <div class="slide-inner">
+      <div class="label accent animate-in" style="margin-bottom:20px;">Method 1 — Upload to Chat</div>
+      <div class="headline-lg animate-in d1" style="margin-bottom:16px;">File format matters.</div>
+      <div class="subtitle animate-in d1" style="margin-bottom:40px; max-width:600px;">
+        Lighter files = more room for AI to think, not just read.
+      </div>
+      <div class="bar-chart animate-in d2">
+        <div class="bar-row">
+          <div class="bar-label">.csv</div>
+          <div class="bar-track"><div class="bar-fill optimal" style="width:30%;"><span>Lightest</span></div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">.md / .txt</div>
+          <div class="bar-track"><div class="bar-fill optimal" style="width:35%;"><span>Light</span></div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">.xlsx</div>
+          <div class="bar-track"><div class="bar-fill heavy" style="width:60%;"><span>Heavier</span></div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">.pdf</div>
+          <div class="bar-track"><div class="bar-fill heavy" style="width:80%;"><span>Heaviest — Eats context</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 6: The Prompt -->
+  <div class="slide" data-chapter="3">
+    <div class="slide-inner">
+      <div class="label accent animate-in" style="margin-bottom:20px;">Method 1 — The Prompt</div>
+      <div class="headline-md animate-in d1" style="margin-bottom:32px;">Upload your file. Then use this:</div>
+      <div class="prompt-block animate-in d2">
+        <span class="highlight">You are a business analyst that specializes in</span> <span class="variable">[your industry]</span> <span class="highlight">that I just hired to audit my data.</span> I'm the <span class="variable">[your role]</span> and <span class="variable">[your intent]</span>. Explore this dataset with fresh eyes. <span class="key-phrase">Find patterns, anomalies, correlations, and surprises</span> that I probably do not know about. For each finding, tell me what you found, why it matters, and what I should do about it. <span class="key-phrase">Do not just confirm obvious things.</span> I want the stuff that is easy to miss when you look at the same numbers every day.
+      </div>
+      <div class="animate-in d3" style="margin-top:20px; display:flex; flex-direction:column; gap:6px;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="width:32px; height:2px; background:var(--accent);"></div>
+          <div class="subtitle" style="font-size:15px;">No specific questions. No categories. <span style="color:var(--text-primary);">Just intent.</span></div>
+        </div>
+        <div style="padding-left:44px;">
+          <div class="mono" style="font-size:12px; color:var(--text-muted);">e.g. intent = "I want to ensure I'm effectively investing in the business to grow and not wasting money"</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 7: Then Constrain -->
+  <div class="slide" data-chapter="3">
+    <div class="slide-inner" style="text-align:center;">
+      <div class="label animate-in" style="margin-bottom:28px;">Then Constrain</div>
+      <div class="headline-lg animate-in d1" style="margin-bottom:48px; max-width:700px; margin-left:auto; margin-right:auto;">
+        Pick the most interesting finding.<br>Then go deeper.
+      </div>
+      <div class="animate-in d2" style="display:flex; align-items:center; justify-content:center; gap:20px;">
+        <div style="padding:24px 32px; border:1px solid var(--border); border-radius:8px; text-align:center;">
+          <div class="mono" style="font-size:11px; color:var(--text-muted); letter-spacing:1.5px; margin-bottom:10px;">AI FINDS</div>
+          <div style="font-size:18px; color:var(--text-secondary);">10 findings</div>
+        </div>
+        <div style="font-size:22px; color:var(--text-muted);">→</div>
+        <div style="padding:24px 32px; border:1px solid var(--border); border-radius:8px; text-align:center;">
+          <div class="mono" style="font-size:11px; color:var(--text-muted); letter-spacing:1.5px; margin-bottom:10px;">YOU PICK</div>
+          <div style="font-size:18px; color:var(--text-secondary);">The surprise</div>
+        </div>
+        <div style="font-size:22px; color:var(--text-muted);">→</div>
+        <div style="padding:24px 32px; border:1px solid rgba(196,66,48,0.2); border-radius:8px; text-align:center; background:var(--accent-soft);">
+          <div class="mono" style="font-size:11px; color:var(--accent); letter-spacing:1.5px; margin-bottom:10px;">YOU ASK</div>
+          <div style="font-size:18px; color:var(--text-primary);">"Go deeper on this"</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 8: Folder Overview -->
+  <div class="slide" data-chapter="4">
+    <div class="slide-inner">
+      <div class="label accent animate-in" style="margin-bottom:20px;">Method 2 — Point AI at a Folder</div>
+      <div class="headline-lg animate-in d1" style="margin-bottom:16px;">
+        Bring <span class="accent-text">AI to the data.</span>
+      </div>
+      <div class="subtitle animate-in d1" style="margin-bottom:40px; max-width:550px;">
+        For dozens of files, hundreds of receipts — all mixed together.
+      </div>
+      <div class="animate-in d2">
+        <div class="folder-tree">
+          <div><span class="branch">📁</span> <span class="tree-folder">Expense Analysis/</span></div>
+          <div class="indent"><span class="branch">├──</span> <span style="color:var(--text-secondary);">jan_expenses.csv</span></div>
+          <div class="indent"><span class="branch">├──</span> <span style="color:var(--text-secondary);">feb_expenses.csv</span></div>
+          <div class="indent"><span class="branch">├──</span> <span style="color:var(--text-secondary);">receipts_q1.pdf</span></div>
+          <div class="indent"><span class="branch">├──</span> <span style="color:var(--text-secondary);">subscriptions.xlsx</span></div>
+          <div class="indent"><span class="branch">├──</span> <span class="tree-special">CLAUDE.md</span> &nbsp;<span style="font-size:11px; color:var(--accent);">← your instructions</span></div>
+          <div class="indent"><span class="branch">├──</span> <span class="tree-generated">todos.md</span> &nbsp;<span style="font-size:11px; color:#8ba578;">← AI creates</span></div>
+          <div class="indent"><span class="branch">└──</span> <span class="tree-generated">insights.md</span> &nbsp;<span style="font-size:11px; color:#8ba578;">← AI creates</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 9: CLAUDE.md -->
+  <div class="slide" data-chapter="4">
+    <div class="slide-inner">
+      <div class="label accent animate-in" style="margin-bottom:20px;">The Instructions File</div>
+      <div class="headline-md animate-in d1" style="margin-bottom:28px;">CLAUDE.md</div>
+      <div class="file-block animate-in d2">
+        <div class="file-header">
+          <div class="file-dot r"></div>
+          <div class="file-dot y"></div>
+          <div class="file-dot g"></div>
+          <div class="file-name">CLAUDE.md</div>
+        </div>
+        <div class="file-body">
+          <span class="cm-comment"># Task</span><br>
+          <span class="cm-str">You are a business analyst that specializes in</span> <span class="cm-variable">[industry]</span><br>
+          <span class="cm-str">that I hired to audit the</span> <span class="cm-variable">[data type]</span> <span class="cm-str">in this folder.</span><br>
+          <span class="cm-str">I'm the</span> <span class="cm-variable">[role]</span> <span class="cm-str">and</span> <span class="cm-variable">[intent]</span><span class="cm-str">.</span><br>
+          <span class="cm-str">Explore every file. Find patterns, anomalies, and surprises.</span><br>
+          <span class="cm-str">Create a findings report ranked by impact.</span><br><br>
+          <span class="cm-comment"># Rules</span><br>
+          <span class="cm-key">1.</span> Before anything else, <span class="cm-key">check the todos file.</span><br>
+          <span class="cm-key">2.</span> If it doesn't exist, <span class="cm-key">create it first.</span><br>
+          <span class="cm-key">3.</span> List every file that needs processing.<br>
+          <span class="cm-key">4.</span> As you finish each file, <span class="cm-key">check it off.</span><br>
+          <span class="cm-key">5.</span> Create an <span class="cm-key">insights file.</span> Add findings after each file.<br>
+          <span class="cm-key">6.</span> Always update both files before moving on.<br>
+          <span class="cm-key">7.</span> If memory resets, <span class="cm-key">read this file first,</span><br>
+          &nbsp;&nbsp;&nbsp;check todos, and <span class="cm-key">keep going.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 10: Autonomous Loop -->
+  <div class="slide" data-chapter="4">
+    <div class="slide-inner" style="text-align:center;">
+      <div class="label accent animate-in" style="margin-bottom:20px;">How It Works</div>
+      <div class="headline-md animate-in d1" style="margin-bottom:24px;">The autonomous loop</div>
+      <div class="animate-in d2">
+        <div class="loop-container" id="loopContainer">
+          <svg class="loop-svg" id="loopSvg" viewBox="0 0 520 480"></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 11: Recap — Order Matters -->
+  <div class="slide" data-chapter="5" id="finalSlide">
+    <div class="slide-inner" style="display:flex; align-items:center; gap:80px;">
+      <div style="flex:1;">
+        <div class="label accent animate-in" style="margin-bottom:20px;">The Takeaway</div>
+        <div class="headline-lg animate-in d1" style="margin-bottom:16px;">Order matters.</div>
+      </div>
+      <div style="flex:1;" class="animate-in d2">
+        <div class="wrong-order" style="max-width:400px;">
+          <div class="label accent" style="margin-bottom:8px;">The right order</div>
+          <div class="order-step right-step">
+            <div class="order-num">1</div>
+            <div class="order-text"><strong>Explore</strong> — Share data + intent.</div>
+          </div>
+          <div style="text-align:center; color:var(--accent); font-size:14px; opacity:0.5; letter-spacing:2px;">↓</div>
+          <div class="order-step right-step">
+            <div class="order-num">2</div>
+            <div class="order-text"><strong>Discover</strong> — Find what you didn't know to ask.</div>
+          </div>
+          <div style="text-align:center; color:var(--accent); font-size:14px; opacity:0.5; letter-spacing:2px;">↓</div>
+          <div class="order-step right-step">
+            <div class="order-num">3</div>
+            <div class="order-text"><strong>Constrain</strong> — Go deep on what surprised you.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="animate-in d3" style="position:absolute; bottom:60px; left:0; right:0; text-align:center;">
+      <div style="font-size:18px; color:var(--text-secondary); font-weight:300; letter-spacing:0.2px;">Share your intent. <span style="color:var(--accent); font-weight:500;">Let AI explore.</span></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ── SLIDE ENGINE ──
+  const slides = document.querySelectorAll('.slide');
+  const totalSlides = slides.length;
+  let currentIndex = 0;
+  document.getElementById('totalSlides').textContent = totalSlides;
+
+  function goToSlide(index) {
+    if (index < 0 || index >= totalSlides) return;
+    if (currentIndex !== index) {
+      slides[currentIndex].classList.remove('active');
+      currentIndex = index;
+      slides[currentIndex].classList.add('active');
+    }
+    document.getElementById('currentSlide').textContent = currentIndex + 1;
+    updateChapterNav();
+  }
+
+  function handleNext() {
+    goToSlide(currentIndex + 1);
+  }
+
+  function handlePrev() {
+    goToSlide(currentIndex - 1);
+  }
+
+  const chapterItems = document.querySelectorAll('.ch-item');
+  function updateChapterNav() {
+    const cc = parseInt(slides[currentIndex].dataset.chapter);
+    chapterItems.forEach(item => {
+      item.classList.remove('active', 'passed');
+      const ic = parseInt(item.dataset.chapter);
+      if (ic === cc) item.classList.add('active');
+      else if (ic < cc) item.classList.add('passed');
+    });
+  }
+  chapterItems.forEach(item => {
+    item.addEventListener('click', () => goToSlide(parseInt(item.dataset.slide)));
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); handleNext(); }
+    else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); handlePrev(); }
+  });
+
+  // ── DOT UNIVERSE ──
+  function createDotUniverse(containerId, mode) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const size = 380, cx = size / 2, cy = size / 2;
+    let seed = 42;
+    function rand() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
+
+    const dots = [];
+    for (let i = 0; i < 130; i++) {
+      const a = rand() * Math.PI * 2;
+      const r = rand() * (size / 2 - 24);
+      dots.push({ x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r });
+    }
+
+    if (mode === 'single') {
+      const hi = 45;
+      dots.forEach((d, i) => {
+        const el = document.createElement('div');
+        el.className = 'universe-dot ' + (i === hi ? 'active-dot' : 'base-dot');
+        el.style.left = d.x + 'px';
+        el.style.top = d.y + 'px';
+        if (i === hi) { el.style.width = '12px'; el.style.height = '12px'; el.style.marginLeft = '-3px'; el.style.marginTop = '-3px'; }
+        container.appendChild(el);
+      });
+
+      // Label at top
+      const lbl = document.createElement('div');
+      lbl.className = 'dot-question-label';
+      lbl.textContent = '"How much did I spend on software?"';
+      lbl.style.textAlign = 'center';
+      lbl.style.top = '4px';
+      container.appendChild(lbl);
+      // Center label horizontally above dot
+      const dotCx = dots[hi].x + 3;
+      requestAnimationFrame(() => {
+        const lblW = lbl.offsetWidth;
+        lbl.style.left = Math.max(0, dotCx - lblW / 2) + 'px';
+      });
+
+      // Beam from label bottom to dot
+      const beam = document.createElement('div');
+      beam.className = 'dot-beam';
+      beam.style.left = (dots[hi].x + 2.5) + 'px';
+      beam.style.top = '36px';
+      beam.style.height = (dots[hi].y - 42) + 'px';
+      container.appendChild(beam);
+
+    } else {
+      const lr = 110, lx = cx + 20, ly = cy - 10;
+      const lens = document.createElement('div');
+      lens.className = 'lens-circle';
+      lens.style.cssText = `width:${lr*2}px;height:${lr*2}px;left:${lx-lr}px;top:${ly-lr}px;`;
+      container.appendChild(lens);
+
+      dots.forEach((d, i) => {
+        const dist = Math.sqrt((d.x - lx) ** 2 + (d.y - ly) ** 2);
+        const inL = dist < lr;
+        const el = document.createElement('div');
+        el.className = 'universe-dot ' + (inL ? 'connected-dot' : 'base-dot');
+        el.style.left = d.x + 'px';
+        el.style.top = d.y + 'px';
+        if (inL) { el.style.width = '8px'; el.style.height = '8px'; }
+        container.appendChild(el);
+        if (inL && i % 3 === 0) {
+          for (let j = i + 1; j < dots.length && j < i + 8; j++) {
+            if (Math.sqrt((dots[j].x - lx) ** 2 + (dots[j].y - ly) ** 2) < lr) {
+              const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+              svg.style.cssText = `position:absolute;left:0;top:0;width:${size}px;height:${size}px;pointer-events:none;`;
+              svg.innerHTML = `<line x1="${d.x+3}" y1="${d.y+3}" x2="${dots[j].x+3}" y2="${dots[j].y+3}" stroke="rgba(196,66,48,0.15)" stroke-width="1"/>`;
+              container.appendChild(svg);
+              break;
+            }
+          }
+        }
+      });
+    }
+  }
+
+  createDotUniverse('dotUniverse1', 'single');
+  createDotUniverse('dotUniverse2', 'lens');
+
+  // ── CIRCULAR LOOP (circle + opaque arrowheads) ──
+  (function buildLoop() {
+    const svg = document.getElementById('loopSvg');
+    const container = document.getElementById('loopContainer');
+    if (!svg || !container) return;
+
+    const nodes = [
+      { icon: '📄', label: 'Read<br>CLAUDE.md', anchor: true },
+      { icon: '📋', label: 'Check<br>Todos', anchor: false },
+      { icon: '🔍', label: 'Analyze<br>Next File', anchor: false },
+      { icon: '💡', label: 'Write<br>Insights', anchor: false },
+      { icon: '✓', label: 'Check Off<br>& Continue', anchor: false },
+    ];
+
+    const cw = 520, ch = 480;
+    const centerX = cw / 2, centerY = ch / 2 + 10;
+    const R = 175;
+    const startAngle = -Math.PI / 2;
+    const N = nodes.length;
+    const nodeW = 130, nodeH = 105;
+
+    const positions = nodes.map((_, i) => {
+      const angle = startAngle + (i / N) * Math.PI * 2;
+      return { x: centerX + Math.cos(angle) * R, y: centerY + Math.sin(angle) * R, angle };
+    });
+
+    // Draw continuous circle — nodes (z-index 2, opaque bg) cover the parts behind them
+    let svgHTML = `<circle cx="${centerX}" cy="${centerY}" r="${R}" fill="none" stroke="rgba(196,66,48,0.25)" stroke-width="1.5"/>`;
+
+    // Draw opaque arrowhead triangles at midpoints between nodes
+    for (let i = 0; i < N; i++) {
+      const midAngle = positions[i].angle + Math.PI / N;
+
+      // Arrowhead position on the circle
+      const ax = centerX + Math.cos(midAngle) * R;
+      const ay = centerY + Math.sin(midAngle) * R;
+
+      // Tangent direction (clockwise on screen = increasing angle direction)
+      const tx = -Math.sin(midAngle);
+      const ty = Math.cos(midAngle);
+
+      // Perpendicular (radial outward)
+      const px = Math.cos(midAngle);
+      const py = Math.sin(midAngle);
+
+      // Arrow triangle
+      const len = 12, hw = 5;
+      const tipX = ax + tx * len * 0.5;
+      const tipY = ay + ty * len * 0.5;
+      const bx = ax - tx * len * 0.5;
+      const by = ay - ty * len * 0.5;
+
+      svgHTML += `<polygon points="${tipX.toFixed(1)},${tipY.toFixed(1)} ${(bx + px * hw).toFixed(1)},${(by + py * hw).toFixed(1)} ${(bx - px * hw).toFixed(1)},${(by - py * hw).toFixed(1)}" fill="#c44230"/>`;
+    }
+
+    svg.innerHTML = svgHTML;
+
+    // Place node elements
+    nodes.forEach((node, i) => {
+      const el = document.createElement('div');
+      el.className = 'loop-node' + (node.anchor ? ' loop-anchor' : '');
+      el.style.left = (positions[i].x - nodeW / 2) + 'px';
+      el.style.top = (positions[i].y - nodeH / 2) + 'px';
+      el.style.width = nodeW + 'px';
+      el.innerHTML = `<span class="loop-icon">${node.icon}</span><div class="loop-label">${node.label}</div>`;
+      container.appendChild(el);
+    });
+  })();
+
+  updateChapterNav();
+</script>
+</body>
+</html>

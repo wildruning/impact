@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>You're the Reason AI Gives You Bad Results</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0b09;
+    --text: #e5dcd0;
+    --text-dim: rgba(229, 220, 208, 0.35);
+    --text-mid: rgba(229, 220, 208, 0.6);
+    --line: rgba(229, 220, 208, 0.1);
+    --line-vis: rgba(229, 220, 208, 0.22);
+    --serif: 'Cormorant Garamond', Georgia, serif;
+    --sans: 'DM Sans', system-ui, sans-serif;
+    --gold: #c9a86c;
+    --gold-dim: rgba(201, 168, 108, 0.12);
+    --gold-glow: rgba(201, 168, 108, 0.06);
+    --teal: #5ba5a5;
+    --teal-dim: rgba(91, 165, 165, 0.12);
+    --teal-glow: rgba(91, 165, 165, 0.06);
+    --copper: #c47d4c;
+    --copper-dim: rgba(196, 125, 76, 0.12);
+    --copper-glow: rgba(196, 125, 76, 0.06);
+    --rose: #b07080;
+    --rose-dim: rgba(176, 112, 128, 0.12);
+    --rose-glow: rgba(176, 112, 128, 0.06);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100vw; height: 100vh; overflow: hidden; background: var(--bg); color: var(--text); font-family: var(--sans); }
+
+  body::after {
+    content: ''; position: fixed; inset: 0; opacity: 0.025; pointer-events: none; z-index: 9999;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 256px;
+  }
+
+  .slide-counter { position: fixed; top: 32px; right: 40px; z-index: 100; font-family: var(--sans); font-size: 12px; font-weight: 400; letter-spacing: 0.1em; color: var(--text-dim); }
+  .slide-counter .cur { color: var(--text-mid); font-weight: 500; }
+
+  .ch-nav { position: fixed; left: 36px; top: 50%; transform: translateY(-50%); z-index: 100; display: flex; flex-direction: column; gap: 2px; }
+  .ch-item { display: flex; align-items: center; gap: 14px; padding: 7px 0; cursor: pointer; transition: all 0.5s ease; opacity: 0.22; }
+  .ch-item.visited { opacity: 0.45; }
+  .ch-item.active { opacity: 1; }
+  .ch-bar { width: 2px; height: 18px; background: var(--text-dim); border-radius: 1px; transition: all 0.5s ease; flex-shrink: 0; }
+  .ch-item.active .ch-bar { height: 26px; }
+  .ch-lbl { font-size: 10px; font-weight: 400; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-dim); transition: all 0.5s; white-space: nowrap; }
+  .ch-item.active .ch-lbl { font-weight: 500; }
+
+  .slide {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    opacity: 0; visibility: hidden; transition: opacity 0.55s cubic-bezier(0.4,0,0.2,1), visibility 0.55s;
+    padding: 50px 50px 50px 190px;
+  }
+  .slide.active { opacity: 1; visibility: visible; }
+  .sc { width: 100%; max-width: 1050px; position: relative; }
+
+  .dlg { font-family: var(--serif); font-size: 52px; font-weight: 300; line-height: 1.12; }
+  .dmd { font-family: var(--serif); font-size: 40px; font-weight: 300; line-height: 1.18; }
+  .lbl { font-family: var(--sans); font-size: 10px; font-weight: 500; letter-spacing: 0.2em; text-transform: uppercase; }
+  .body { font-family: var(--sans); font-size: 16px; font-weight: 300; line-height: 1.7; color: var(--text-mid); }
+  em.a { font-style: italic; font-family: var(--serif); font-weight: 400; }
+  .hr { width: 40px; height: 1px; margin: 20px 0; transform-origin: left; }
+
+  .slide.active .au { animation: au 0.65s cubic-bezier(0.22,1,0.36,1) both; }
+  .slide.active .d1 { animation-delay: 0.08s; }
+  .slide.active .d2 { animation-delay: 0.18s; }
+  .slide.active .d3 { animation-delay: 0.3s; }
+  .slide.active .d4 { animation-delay: 0.42s; }
+  .slide.active .d5 { animation-delay: 0.54s; }
+  .slide.active .d6 { animation-delay: 0.66s; }
+  @keyframes au { from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)} }
+  .slide.active .af { animation: af 0.7s ease both; }
+  @keyframes af { from{opacity:0}to{opacity:1} }
+  .slide.active .alh { animation: alh 0.7s cubic-bezier(0.22,1,0.36,1) both; }
+  @keyframes alh { from{transform:scaleX(0)}to{transform:scaleX(1)} }
+  .slide.active .draw-line { animation: drawL 1.2s cubic-bezier(0.4,0,0.2,1) 0.3s forwards; }
+  @keyframes drawL { to{stroke-dashoffset:0} }
+
+  .kh { position:fixed; bottom:24px; right:40px; font-size:10px; letter-spacing:0.1em; color:var(--text-dim); opacity:0.3; z-index:100; transition:opacity 0.4s; }
+  .kh.gone { opacity:0; }
+
+  /* ═══ STACKED PHASES ═══ */
+  .stack-phases { margin-top: 44px; display: flex; flex-direction: column; gap: 0; max-width: 520px; }
+  .sp-row { display: flex; align-items: center; gap: 0; position: relative; padding: 0; border-bottom: 1px solid var(--line); }
+  .sp-row:last-child { border-bottom: none; }
+  .sp-num { font-family: var(--serif); font-size: 52px; font-weight: 300; opacity: 0.12; width: 60px; text-align: center; flex-shrink: 0; padding: 16px 0; }
+  .sp-content { flex: 1; padding: 20px 24px; display: flex; align-items: baseline; gap: 16px; }
+  .sp-name { font-family: var(--serif); font-size: 32px; font-weight: 300; color: var(--text-mid); }
+  .sp-sub { font-family: var(--sans); font-size: 12px; color: var(--text-dim); letter-spacing: 0.03em; }
+  .sp-row.lit { background: var(--gold-glow); border-left: 2px solid var(--gold); }
+  .sp-row.lit .sp-name { color: var(--gold); }
+  .sp-row.lit .sp-sub { color: var(--gold); opacity: 0.7; }
+  .sp-row.lit .sp-num { opacity: 0.18; color: var(--gold); }
+  .sp-tag { position: absolute; right: -140px; font-family: var(--sans); font-size: 10px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; white-space: nowrap; }
+
+  /* ═══ PHASE CHART ═══ */
+  .phase-chart { margin-top: 44px; position: relative; height: 340px; max-width: 640px; padding-top: 16px; }
+  .pc-ax-y { position: absolute; left: 0; top: 32px; bottom: 44px; width: 1px; background: var(--line-vis); }
+  .pc-ax-x { position: absolute; left: 0; right: 0; bottom: 44px; height: 1px; background: var(--line-vis); }
+  .pc-ly-y { position: absolute; left: 0; top: 12px; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-mid); }
+  .pc-ly-x { position: absolute; bottom: 22px; right: 0; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-mid); }
+  .pc-svg { position: absolute; left: 1px; right: 0; bottom: 44px; top: 32px; }
+  .pc-svg svg { width: 100%; height: 100%; overflow: visible; }
+  .pc-seg { fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-dasharray: 400; stroke-dashoffset: 400; }
+  .slide.active .pc-seg1 { animation: drawL 0.8s cubic-bezier(0.4,0,0.2,1) 0.4s forwards; }
+  .slide.active .pc-seg2 { animation: drawL 0.8s cubic-bezier(0.4,0,0.2,1) 0.9s forwards; }
+  .slide.active .pc-seg3 { animation: drawL 0.8s cubic-bezier(0.4,0,0.2,1) 1.3s forwards; }
+  .pc-fill { opacity: 0; }
+  .slide.active .pc-fill { animation: af 1s ease 1.0s both; }
+  .pc-dot { r: 4.5; fill: var(--bg); stroke-width: 2; opacity: 0; }
+  .slide.active .pc-dot { animation: af 0.4s ease both; }
+  .slide.active .pc-dot.dot1 { animation-delay: 0.6s; }
+  .slide.active .pc-dot.dot2 { animation-delay: 1.1s; }
+  .slide.active .pc-dot.dot3 { animation-delay: 1.5s; }
+  .pc-label { position: absolute; font-family: var(--serif); font-weight: 300; opacity: 0; }
+  .slide.active .pc-label { animation: au 0.5s cubic-bezier(0.22,1,0.36,1) both; }
+  .pc-label .pc-name { font-size: 20px; display: block; line-height: 1.2; }
+  .pc-label .pc-sub { font-family: var(--sans); font-size: 10px; font-weight: 400; letter-spacing: 0.04em; color: var(--text-dim); display: block; margin-top: 2px; }
+  .pc-stuck { position: absolute; font-family: var(--sans); font-size: 9px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-mid); white-space: nowrap; opacity: 0; padding: 4px 10px; border: 1px solid var(--line); background: rgba(229,220,208,0.03); }
+  .slide.active .pc-stuck { animation: af 0.6s ease 0.9s both; }
+  .pc-zone-bg { position: absolute; bottom: 44px; top: 32px; opacity: 0; pointer-events: none; }
+  .slide.active .pc-zone-bg { animation: af 0.8s ease 0.8s both; }
+
+  /* ═══ EXECUTIVE EXAMPLES ═══ */
+  .exec-rows { display: flex; flex-direction: column; gap: 0; margin-top: 44px; max-width: 700px; }
+  .ex-row { display: flex; gap: 20px; padding: 22px 0; border-bottom: 1px solid var(--line); align-items: flex-start; }
+  .ex-row:last-child { border-bottom: none; }
+  .ex-before { flex: 1; font-size: 14px; font-weight: 300; color: var(--text-dim); line-height: 1.55; }
+  .ex-arr { flex-shrink: 0; color: var(--gold); font-size: 18px; opacity: 0.5; padding-top: 1px; }
+  .ex-after { flex: 1; font-size: 14px; font-weight: 400; color: var(--text); line-height: 1.55; }
+  .ex-after .hl { color: var(--gold); }
+
+  /* ═══ MIDDLEMAN ═══ */
+  .mm { margin-top: 52px; display: flex; align-items: center; justify-content: center; gap: 0; }
+  .mm-node { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .mm-c { width: 100px; height: 100px; border-radius: 50%; border: 1px solid var(--line-vis); display: flex; align-items: center; justify-content: center; font-family: var(--sans); font-size: 12px; font-weight: 400; letter-spacing: 0.06em; color: var(--text-mid); }
+  .mm-c.you { width: 130px; height: 130px; font-size: 18px; font-weight: 500; font-family: var(--serif); font-style: italic; }
+  .mm-sub { font-size: 10px; color: var(--text-mid); text-align: center; line-height: 1.5; max-width: 110px; }
+  .mm-line { width: 72px; height: 1px; background: var(--line-vis); position: relative; }
+  .mm-line span { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-mid); white-space: nowrap; }
+
+  /* ═══ BOTTLENECK TRIPTYCH ═══ */
+  .bn3 { display: flex; gap: 20px; margin-top: 48px; }
+  .bn3-card { flex: 1; padding: 28px 24px; border: 1px solid var(--line); position: relative; display: flex; flex-direction: column; gap: 8px; }
+  .bn3-num { font-family: var(--serif); font-size: 48px; font-weight: 300; opacity: 0.15; position: absolute; top: 14px; right: 18px; }
+  .bn3-title { font-family: var(--serif); font-size: 24px; font-weight: 300; }
+
+  /* ═══ SHIFT OPENER ═══ */
+  .shift-open { display: flex; flex-direction: column; justify-content: center; min-height: 55vh; }
+  .shift-head { font-family: var(--serif); font-size: 54px; font-weight: 300; line-height: 1.12; max-width: 600px; }
+  .shift-head .sw { font-style: italic; }
+
+  /* ═══ LAYERS ═══ */
+  .layers { display: flex; flex-direction: column; gap: 0; margin-top: 44px; max-width: 640px; }
+  .ly-row { display: flex; align-items: center; gap: 20px; padding: 22px 0; border-bottom: 1px solid var(--line); }
+  .ly-row:last-child { border-bottom: none; }
+  .ly-d { font-size: 10px; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim); width: 64px; flex-shrink: 0; }
+  .ly-n { font-family: var(--serif); font-size: 26px; font-weight: 300; flex: 1; }
+  .ly-tag { font-size: 9px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 10px; border-radius: 2px; border: 1px solid; }
+  .ly-tag.now { border-color: rgba(130,175,130,0.35); color: rgba(130,175,130,0.75); background: rgba(130,175,130,0.05); }
+  .ly-tag.adv { border-color: currentColor; opacity: 0.55; }
+
+  /* ═══ CURVE CHART ═══ */
+  .curve-wrap { margin-top: 44px; position: relative; height: 260px; max-width: 640px; }
+  .cw-ax-y { position: absolute; left: 0; top: 0; bottom: 36px; width: 1px; background: var(--line-vis); }
+  .cw-ax-x { position: absolute; left: 0; right: 0; bottom: 36px; height: 1px; background: var(--line-vis); }
+  .cw-ly-y { position: absolute; left: 10px; top: 8px; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-mid); }
+  .cw-ly-x { position: absolute; bottom: 14px; right: 0; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-mid); }
+  .cw-flat { position: absolute; left: 28px; right: 28px; bottom: 120px; height: 1px; background: var(--text-mid); opacity: 0.4; }
+  .cw-flat-lbl { position: absolute; right: 0; top: -20px; font-family: var(--sans); font-size: 11px; color: var(--text-mid); }
+  .cw-svg { position: absolute; left: 28px; right: 28px; bottom: 36px; top: 0; }
+  .cw-svg svg { width: 100%; height: 100%; }
+  .cw-curve { fill: none; stroke-width: 2.5; stroke-dasharray: 500; stroke-dashoffset: 500; }
+  .cw-clbl { position: absolute; right: 0; top: 16px; font-family: var(--serif); font-size: 14px; font-style: italic; }
+
+  /* ═══ MEMORY BARS ═══ */
+  .mbars { display: flex; align-items: flex-end; gap: 20px; margin-top: 44px; height: 240px; max-width: 480px; padding-bottom: 60px; border-bottom: 1px solid var(--line); }
+  .mb { flex: 1; position: relative; min-height: 16px; border-top: 2px solid; }
+  .mb-lbl { position: absolute; bottom: -22px; left: 50%; transform: translateX(-50%); font-size: 10px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-mid); white-space: nowrap; }
+  .mb-detail { position: absolute; bottom: -40px; left: 50%; transform: translateX(-50%); font-size: 10px; color: var(--text-mid); white-space: nowrap; text-align: center; opacity: 0.7; }
+  .mb-note { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); font-size: 9px; letter-spacing: 0.04em; white-space: nowrap; text-align: center; }
+  .mb-context { margin-top: 56px; font-size: 12px; color: var(--text-dim); line-height: 1.6; max-width: 420px; border-left: 1px solid; padding-left: 14px; }
+
+  /* ═══ MEMORY LIST ═══ */
+  .mem-list { display: flex; flex-direction: column; gap: 0; margin-top: 44px; max-width: 540px; }
+  .ml-row { display: flex; align-items: baseline; gap: 16px; padding: 18px 0; border-bottom: 1px solid var(--line); }
+  .ml-row:last-child { border-bottom: none; }
+  .ml-icon { font-family: var(--serif); font-size: 14px; font-style: italic; color: var(--teal); flex-shrink: 0; opacity: 0.5; }
+  .ml-text { font-family: var(--sans); font-size: 14px; font-weight: 300; color: var(--text-mid); line-height: 1.55; }
+  .ml-text .ml-hl { color: var(--teal); font-weight: 400; }
+
+  /* ═══ PROMPT BLOCK ═══ */
+  .prompt {
+    margin-top: 24px; background: rgba(255,255,255,0.015);
+    border: 1px solid var(--line); padding: 22px 24px 20px 24px; position: relative;
+    font-family: var(--sans); font-size: 12.5px; line-height: 1.75; color: var(--text-mid); font-weight: 300;
+    max-width: 720px; border-left-width: 2px;
+  }
+  .prompt .ph { font-weight: 600; font-size: 13.5px; display: block; margin-bottom: 2px; }
+  .prompt .psh { font-weight: 500; color: var(--text); font-size: 12.5px; margin-top: 12px; display: block; }
+  .prompt .pk { font-weight: 400; }
+  .prompt-tag { position: absolute; top: -10px; left: 20px; padding: 1px 10px; font-size: 9px; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; }
+  .file-tree { margin: 6px 0 2px 4px; }
+  .ft-row { display: flex; align-items: center; gap: 8px; padding: 2px 0; font-size: 12px; color: var(--text-mid); font-weight: 300; }
+  .ft-icon { width: 13px; height: 13px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .ft-dim { color: var(--text-dim); font-size: 11px; margin-left: 4px; }
+  .ft-new { font-size: 8px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; padding: 1px 5px; border-radius: 2px; margin-left: 6px; }
+
+  /* ═══ COMPOUNDING BARS ═══ */
+  .cbars { display: flex; align-items: flex-end; gap: 12px; margin-top: 44px; height: 220px; max-width: 540px; padding-bottom: 36px; border-bottom: 1px solid var(--line); }
+  .cb { flex: 1; position: relative; min-height: 16px; border-top: 2px solid; }
+  .cb-lbl { position: absolute; bottom: -24px; left: 50%; transform: translateX(-50%); font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-mid); white-space: nowrap; }
+
+  /* ═══ BINARY CRITERIA ═══ */
+  .crit { display: flex; flex-direction: column; gap: 0; margin-top: 40px; max-width: 620px; }
+  .cr-row { display: flex; align-items: center; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+  .cr-row:last-child { border-bottom: none; }
+  .cr-box { width: 24px; height: 24px; border: 1px solid var(--line); border-radius: 2px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 12px; }
+  .cr-row.on .cr-box { border-color: currentColor; }
+  .cr-t { font-size: 14px; font-weight: 300; color: var(--text-mid); flex: 1; line-height: 1.45; }
+  .cr-row.on .cr-t { color: var(--text); }
+  .cr-yn { margin-left: auto; font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; flex-shrink: 0; color: var(--text-dim); }
+
+  /* ═══ DUAL PROMPTS — toggleable ═══ */
+  .dual-prompts { margin-top: 32px; display: flex; flex-direction: column; gap: 20px; max-width: 680px; }
+  .dp-block {
+    padding: 22px 24px; border: 1px solid var(--line); position: relative;
+    font-family: var(--sans); font-weight: 300; line-height: 1.7;
+    border-left-width: 2px; background: rgba(255,255,255,0.012);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  .dp-block.dimmed { opacity: 0.18; transform: scale(0.98); }
+  .dp-block.bright { opacity: 1; transform: scale(1); }
+  .dp-label {
+    position: absolute; top: -10px; left: 16px; padding: 1px 10px;
+    font-size: 9px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase;
+    transition: opacity 0.5s ease;
+  }
+  .dp-block.dimmed .dp-label { opacity: 0.3; }
+  .dp-block .dp-text { font-size: 15px; color: var(--text-mid); }
+  .dp-block .dp-hl { font-weight: 400; }
+
+  /* ═══ RECAP — toggleable rows ═══ */
+  .recap-shifts { display: flex; flex-direction: column; gap: 0; margin-top: 36px; max-width: 680px; }
+  .rs-row {
+    display: flex; align-items: flex-start; gap: 24px; padding: 28px 0;
+    border-bottom: 1px solid var(--line);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  .rs-row:last-child { border-bottom: none; }
+  .rs-row.rs-dimmed { opacity: 0.15; transform: scale(0.98); }
+  .rs-row.rs-bright { opacity: 1; transform: scale(1); }
+  .rs-num { font-family: var(--serif); font-size: 44px; font-weight: 300; width: 44px; text-align: center; flex-shrink: 0; line-height: 1; padding-top: 2px; }
+  .rs-content { flex: 1; }
+  .rs-title { font-family: var(--serif); font-size: 26px; font-weight: 300; line-height: 1.2; margin-bottom: 6px; }
+  .rs-desc { font-family: var(--sans); font-size: 13px; font-weight: 300; color: var(--text-mid); line-height: 1.6; }
+
+  .cross-v {
+    margin-top: 32px; display: flex; align-items: center; gap: 20px;
+    transition: opacity 0.5s ease;
+  }
+  .cross-v.cv-dimmed { opacity: 0.15; }
+  .cross-v.cv-bright { opacity: 1; }
+  .cross-b { padding: 14px 28px; font-family: var(--serif); font-size: 26px; font-weight: 300; border: 1px solid var(--line); color: var(--text-dim); }
+  .cross-b.to { border-color: currentColor; }
+  .cross-a { font-size: 22px; opacity: 0.4; }
+</style>
+</head>
+<body>
+
+<div class="slide-counter"><span class="cur" id="curS">1</span> / <span id="totS">15</span></div>
+
+<nav class="ch-nav" id="chNav">
+  <div class="ch-item active" data-ch="0" onclick="goCh(0)"><div class="ch-bar"></div><span class="ch-lbl">The Path</span></div>
+  <div class="ch-item" data-ch="1" onclick="goCh(1)"><div class="ch-bar"></div><span class="ch-lbl">The Pattern</span></div>
+  <div class="ch-item" data-ch="2" onclick="goCh(2)"><div class="ch-bar"></div><span class="ch-lbl">Shift 1 · Memory</span></div>
+  <div class="ch-item" data-ch="3" onclick="goCh(3)"><div class="ch-bar"></div><span class="ch-lbl">Shift 2 · Router</span></div>
+  <div class="ch-item" data-ch="4" onclick="goCh(4)"><div class="ch-bar"></div><span class="ch-lbl">Shift 3 · Quality</span></div>
+  <div class="ch-item" data-ch="5" onclick="goCh(5)"><div class="ch-bar"></div><span class="ch-lbl">Recap</span></div>
+</nav>
+
+<div class="kh" id="kh">← →</div>
+
+<div style="width:100vw;height:100vh;position:relative;">
+
+<!-- ═══ 0 · THE PATH ═══ -->
+<div class="slide active" data-s="0" data-ch="0">
+  <div class="sc">
+    <div class="lbl au" style="color:var(--gold)">The Path</div>
+    <div class="hr au d1 alh" style="background:var(--gold)"></div>
+    <div class="dlg au d1" style="max-width:520px;">Three phases. They <em class="a" style="color:var(--gold)">stack.</em></div>
+    <div class="stack-phases">
+      <div class="sp-row au d2">
+        <div class="sp-num">1</div>
+        <div class="sp-content"><div class="sp-name">Adopt</div><div class="sp-sub">Tools, prompts, features</div></div>
+        <div class="sp-tag" style="color:var(--text-mid)">Most are stuck here</div>
+      </div>
+      <div class="sp-row lit au d3">
+        <div class="sp-num">2</div>
+        <div class="sp-content"><div class="sp-name">Adapt</div><div class="sp-sub">Change how you work</div></div>
+        <div class="sp-tag" style="color:var(--gold)">← The unlock</div>
+      </div>
+      <div class="sp-row au d4">
+        <div class="sp-num">3</div>
+        <div class="sp-content"><div class="sp-name">Automate</div><div class="sp-sub">AI handles end to end</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 1 · ALREADY ADAPTING (executive examples) ═══ -->
+<div class="slide" data-s="1" data-ch="1">
+  <div class="sc">
+    <div class="lbl au" style="color:var(--gold)">The Pattern</div>
+    <div class="hr au d1 alh" style="background:var(--gold)"></div>
+    <div class="dlg au d1" style="max-width:600px;">They've <em class="a" style="color:var(--gold)">already started.</em></div>
+    <div class="exec-rows">
+      <div class="ex-row au d2">
+        <div class="ex-before">Restating key decisions at end of meetings</div>
+        <div class="ex-arr">→</div>
+        <div class="ex-after">So the <span class="hl">transcript</span> captures them for AI</div>
+      </div>
+      <div class="ex-row au d3">
+        <div class="ex-before">Stopped saving data as PDFs</div>
+        <div class="ex-arr">→</div>
+        <div class="ex-after">Exporting <span class="hl">CSVs</span> — AI processes them perfectly</div>
+      </div>
+      <div class="ex-row au d4">
+        <div class="ex-before">Pre-bundling related documents</div>
+        <div class="ex-arr">→</div>
+        <div class="ex-after">Single <span class="hl">folder</span> with everything AI needs</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ 2 · MIDDLEMAN ═══ -->
+<div class="slide" data-s="2" data-ch="1">
+  <div class="sc">
+    <div class="lbl au" style="color:var(--gold)">The Pattern</div>
+    <div class="hr au d1 alh" style="background:var(--gold)"></div>
+    <div class="dlg au d1" style="max-width:650px;">You are the <em class="a" style="color:var(--gold)">middleman.</em></div>
+    <div class="mm au d2">
+      <div class="mm-node"><div class="mm-c">Your Work</div></div>
+      <div class="mm-line"><span>manual</span></div>
+      <div class="mm-node">
+        <div class="mm-c you" style="border-color:var(--gold); color:var(--gold); background:var(--gold-glow);">You</div>
+        <div class="mm-sub">context · files · quality</div>
+      </div>
+      <div class="mm-line"><span>manual</span></div>
+      <div class="mm-node"><div class="mm-c">AI</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 3 · THREE BOTTLENECKS ═══ -->
+<div class="slide" data-s="3" data-ch="1">
+  <div class="sc">
+    <div class="lbl au" style="color:var(--gold)">The Pattern</div>
+    <div class="hr au d1 alh" style="background:var(--gold)"></div>
+    <div class="dlg au d1" style="max-width:600px;">Three <em class="a" style="color:var(--gold)">bottlenecks.</em></div>
+    <div class="bn3">
+      <div class="bn3-card au d2" style="border-left: 2px solid var(--teal);"><div class="bn3-num" style="color:var(--teal)">1</div><div class="bn3-title" style="color:var(--teal)">The Memory</div></div>
+      <div class="bn3-card au d3" style="border-left: 2px solid var(--copper);"><div class="bn3-num" style="color:var(--copper)">2</div><div class="bn3-title" style="color:var(--copper)">The Router</div></div>
+      <div class="bn3-card au d4" style="border-left: 2px solid var(--rose);"><div class="bn3-num" style="color:var(--rose)">3</div><div class="bn3-title" style="color:var(--rose)">The Quality Checker</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 4 · SHIFT 1 OPENER ═══ -->
+<div class="slide" data-s="4" data-ch="2">
+  <div class="sc shift-open">
+    <div class="lbl au" style="color:var(--teal)">Shift One</div>
+    <div class="hr au d1 alh" style="background:var(--teal)"></div>
+    <div class="shift-head au d2"><span class="sw" style="color:var(--teal)">Stop</span> being the memory.</div>
+    <div class="mem-list au d3">
+      <div class="ml-row"><div class="ml-icon">"</div><div class="ml-text">This client <span class="ml-hl">hates bullet points</span> — wants everything in paragraphs</div></div>
+      <div class="ml-row"><div class="ml-icon">"</div><div class="ml-text">Pricing <span class="ml-hl">changed in January</span></div></div>
+      <div class="ml-row"><div class="ml-icon">"</div><div class="ml-text">When the boss says "keep it tight" she means <span class="ml-hl">under one page</span></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 4B · WHAT LIVES IN YOUR HEAD ═══ -->
+<div class="slide" data-s="5" data-ch="2">
+  <div class="sc">
+    <div class="lbl au" style="color:var(--teal)">Shift 1 · Memory</div>
+    <div class="hr au d1 alh" style="background:var(--teal)"></div>
+    <div class="dmd au d1" style="max-width:520px;">All of this lives in <em class="a" style="color:var(--teal)">your head.</em></div>
+    <div class="layers au d2">
+      <div class="ly-row"><div class="ly-d">Layer 1</div><div class="ly-n">System Instructions</div><div class="ly-tag now">Static</div></div>
+      <div class="ly-row"><div class="ly-d">Layer 2</div><div class="ly-n">Knowledge Bases</div><div class="ly-tag now">Static</div></div>
+      <div class="ly-row"><div class="ly-d">Layer 3</div><div class="ly-n">Memory Files</div><div class="ly-tag adv" style="color:var(--teal)">Dynamic</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 5 · TOOL VS ASSET ═══ -->
+<div class="slide" data-s="5" data-ch="2">
+  <div class="sc">
+    <div class="lbl au" style="color:var(--teal)">Shift 1 · Memory</div>
+    <div class="hr au d1 alh" style="background:var(--teal)"></div>
+    <div class="dmd au d1" style="max-width:520px;">Tool stays flat. Asset <em class="a" style="color:var(--teal)">compounds.</em></div>
+    <div class="curve-wrap au d2">
+      <div class="cw-ax-y"></div><div class="cw-ax-x"></div>
+      <div class="cw-ly-y">Output quality ↑</div>
+      <div class="cw-ly-x">Sessions over time →</div>
+      <div class="cw-flat"><div class="cw-flat-lbl">Without memory file</div></div>
+      <div class="cw-svg">
+        <svg viewBox="0 0 580 220" preserveAspectRatio="none">
+          <path class="cw-curve draw-line" stroke="var(--teal)" d="M 0 200 Q 70 190, 140 168 Q 220 140, 290 105 Q 360 68, 440 38 Q 510 14, 580 5" />
+        </svg>
+        <div class="cw-clbl" style="color:var(--teal)">With memory file</div>
+      </div>
+    </div>
+    <div class="body au d3" style="margin-top:28px; font-size:13px; max-width:400px; border-left:1px solid var(--teal); padding-left:14px; opacity:0.8;">
+      Key rule: <em class="a" style="color:var(--teal)">Append only.</em> Never delete.
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 7 · SHIFT 2 OPENER ═══ -->
+<div class="slide" data-s="7" data-ch="3">
+  <div class="sc shift-open">
+    <div class="lbl au" style="color:var(--copper)">Shift Two</div>
+    <div class="hr au d1 alh" style="background:var(--copper)"></div>
+    <div class="shift-head au d2"><span class="sw" style="color:var(--copper)">Stop</span> being the router.</div>
+  </div>
+</div>
+
+<!-- ═══ 7B · WHY ROUTING MATTERS ═══ -->
+<div class="slide" data-s="8" data-ch="3">
+  <div class="sc">
+    <div class="lbl au" style="color:var(--copper)">Shift 2 · Router</div>
+    <div class="hr au d1 alh" style="background:var(--copper)"></div>
+    <div class="dmd au d1" style="max-width:560px;">Bring AI to the files — not files <em class="a" style="color:var(--copper)">to AI.</em></div>
+    <div class="exec-rows">
+      <div class="ex-row au d2">
+        <div class="ex-before" style="flex:none; width:64px; font-size:10px; font-weight:500; letter-spacing:0.12em; text-transform:uppercase; color:var(--copper); padding-top:2px;">One-off</div>
+        <div class="ex-after" style="flex:1;">Point AI at <span class="hl" style="color:var(--copper)">50 client transcripts</span> — extract wins, losses, and upsell opportunities in one pass</div>
+      </div>
+      <div class="ex-row au d3">
+        <div class="ex-before" style="flex:none; width:64px; font-size:10px; font-weight:500; letter-spacing:0.12em; text-transform:uppercase; color:var(--copper); padding-top:2px;">Ongoing</div>
+        <div class="ex-after" style="flex:1;">Every new call transcript <span class="hl" style="color:var(--copper)">drops into the folder</span> — AI processes it automatically and updates what it knows</div>
+      </div>
+    </div>
+    <div class="body au d4" style="margin-top:32px; font-size:13px; max-width:440px; border-left:1px solid var(--copper); padding-left:14px; opacity:0.8;">
+      Chat tools process one conversation at a time. File tools process <em class="a" style="color:var(--copper)">entire folders.</em>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 8 · CLAUDE.md PROMPT ═══ -->
+<div class="slide" data-s="8" data-ch="3">
+  <div class="sc" style="display:flex; flex-direction:column; align-items:flex-start;">
+    <div class="lbl au" style="color:var(--copper)">Shift 2 · Router</div>
+    <div class="hr au d1 alh" style="background:var(--copper)"></div>
+    <div style="display:flex; gap:16px; margin-bottom:20px;" class="au d1">
+      <div style="padding:10px 18px; border:1px solid rgba(196,125,76,0.3); font-size:13px; color:var(--copper); background:var(--copper-glow); letter-spacing:0.03em;">CLAUDE.md</div>
+      <div style="padding:10px 18px; border:1px solid var(--line); font-size:13px; color:var(--text-mid); letter-spacing:0.03em;">AGENTS.md</div>
+    </div>
+    <div class="prompt au d2" style="border-left-color:var(--copper);">
+      <div class="prompt-tag" style="color:var(--copper); background:var(--bg);">CLAUDE.md</div>
+      <span class="ph" style="color:var(--copper)"># YouTube Content Library</span><br>
+      <span class="psh">## What's Here</span>
+      Database of 51 YouTube video topics with transcripts.
+      <div class="file-tree">
+        <div class="ft-row"><div class="ft-icon" style="color:var(--copper); opacity:0.7;"><svg width="12" height="10" viewBox="0 0 13 11" fill="none"><path d="M1 2.5V9.5C1 10.05 1.45 10.5 2 10.5H11C11.55 10.5 12 10.05 12 9.5V3.5C12 2.95 11.55 2.5 11 2.5H6.5L5.5 1.5H2C1.45 1.5 1 1.95 1 2.5Z" fill="currentColor" opacity="0.6"/></svg></div><span style="color:var(--copper); font-weight:400;">/captions/</span><span class="ft-dim">— raw transcript files</span></div>
+        <div class="ft-row"><div class="ft-icon" style="color:var(--text-dim);"><svg width="10" height="11" viewBox="0 0 10 12" fill="none"><rect x="0.5" y="0.5" width="9" height="11" rx="1" stroke="currentColor" opacity="0.5"/></svg></div><span>video_summaries.yaml</span><span class="ft-dim">— topics, tags, concepts</span></div>
+        <div class="ft-row"><div class="ft-icon" style="color:var(--text-dim);"><svg width="10" height="11" viewBox="0 0 10 12" fill="none"><rect x="0.5" y="0.5" width="9" height="11" rx="1" stroke="currentColor" opacity="0.5"/></svg></div><span>videos.json</span><span class="ft-dim">— title, date, video ID</span></div>
+      </div>
+      <span class="psh">## Tasks</span>
+      <span class="pk" style="color:var(--copper)">New idea check:</span> Search database for overlapping topics. Flag only genuinely novel ideas.<br><br>
+      <span class="pk" style="color:var(--copper)">Talk/training prep:</span> Given an audience, identify most relevant videos. Extract key points.<br><br>
+      <span class="pk" style="color:var(--copper)">New transcript:</span> Process using schema. Extract core concept, unique angles, tags. Add to database.<br>
+      <span class="psh">## Self-Update Rule</span>
+      When new files are added, <span class="pk" style="color:var(--copper)">update "What's Here" to reflect changes.</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 9 · COMPOUNDING CONTEXT ═══ -->
+<div class="slide" data-s="9" data-ch="3">
+  <div class="sc">
+    <div class="lbl au" style="color:var(--copper)">Shift 2 · Router</div>
+    <div class="hr au d1 alh" style="background:var(--copper)"></div>
+    <div class="dmd au d1" style="max-width:520px;">The map keeps <em class="a" style="color:var(--copper)">improving.</em></div>
+    <div class="cbars au d2">
+      <div class="cb" style="height:28px; background:var(--copper-dim); border-color:var(--copper);"><div class="cb-lbl">File 1</div></div>
+      <div class="cb" style="height:52px; background:var(--copper-dim); border-color:var(--copper);"><div class="cb-lbl">10</div></div>
+      <div class="cb" style="height:82px; background:var(--copper-dim); border-color:var(--copper);"><div class="cb-lbl">20</div></div>
+      <div class="cb" style="height:118px; background:var(--copper-dim); border-color:var(--copper);"><div class="cb-lbl">30</div></div>
+      <div class="cb" style="height:156px; background:var(--copper-dim); border-color:var(--copper);"><div class="cb-lbl">40</div></div>
+      <div class="cb" style="height:190px; background:var(--copper-dim); border-color:var(--copper);"><div class="cb-lbl">51</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 10 · SHIFT 3 OPENER ═══ -->
+<div class="slide" data-s="10" data-ch="4">
+  <div class="sc shift-open">
+    <div class="lbl au" style="color:var(--rose)">Shift Three</div>
+    <div class="hr au d1 alh" style="background:var(--rose)"></div>
+    <div class="shift-head au d2"><span class="sw" style="color:var(--rose)">Stop</span> being the quality checker.</div>
+  </div>
+</div>
+
+<!-- ═══ 11 · BINARY CRITERIA ═══ -->
+<div class="slide" data-s="11" data-ch="4">
+  <div class="sc">
+    <div class="lbl au" style="color:var(--rose)">Shift 3 · Quality</div>
+    <div class="hr au d1 alh" style="background:var(--rose)"></div>
+    <div class="dmd au d1" style="max-width:500px;">Binary criteria. <em class="a" style="color:var(--rose)">Zero gray area.</em></div>
+    <div class="crit">
+      <div class="cr-row on au d2" style="color:var(--rose);"><div class="cr-box">✓</div><div class="cr-t">Opens with a reference to the previous meeting?</div><div class="cr-yn">Y / N</div></div>
+      <div class="cr-row on au d3" style="color:var(--rose);"><div class="cr-box">✓</div><div class="cr-t">All action items assigned with a deadline?</div><div class="cr-yn">Y / N</div></div>
+      <div class="cr-row on au d4" style="color:var(--rose);"><div class="cr-box">✓</div><div class="cr-t">Under 200 words?</div><div class="cr-yn">Y / N</div></div>
+      <div class="cr-row on au d5" style="color:var(--rose);"><div class="cr-box">✓</div><div class="cr-t">Every paragraph leads with the key point?</div><div class="cr-yn">Y / N</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 12 · DUAL PROMPTS — step toggle (no dots) ═══ -->
+<div class="slide" data-s="12" data-ch="4" data-substep="yes">
+  <div class="sc">
+    <div class="lbl au" style="color:var(--rose)">Shift 3 · Quality</div>
+    <div class="hr au d1 alh" style="background:var(--rose)"></div>
+    <div class="dmd au d1" style="max-width:520px;">Don't know your criteria? <em class="a" style="color:var(--rose)">Let AI find them.</em></div>
+    <div class="dual-prompts au d2">
+      <div class="dp-block bright" id="dp1" style="border-left-color:var(--rose);">
+        <div class="dp-label" style="color:var(--rose); background:var(--bg);">Step 1 · Generate your checklist</div>
+        <div class="dp-text">
+          <span class="dp-hl" style="color:var(--rose)">Analyze these examples.</span> Extract the specific patterns that make them good. Turn each pattern into a <span class="dp-hl" style="color:var(--rose)">binary yes-or-no evaluation question.</span>
+        </div>
+      </div>
+      <div class="dp-block dimmed" id="dp2" style="border-left-color:var(--rose);">
+        <div class="dp-label" style="color:var(--rose); background:var(--bg);">Step 2 · Add to system instructions</div>
+        <div class="dp-text">
+          Before delivering the final output, <span class="dp-hl" style="color:var(--rose)">evaluate against this checklist.</span> If any item fails, <span class="dp-hl" style="color:var(--rose)">revise and re-check.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 13 · RECAP — step-through ═══ -->
+<div class="slide" data-s="13" data-ch="5" data-substep="yes">
+  <div class="sc">
+    <div class="lbl au" style="color:var(--gold)">Recap</div>
+    <div class="hr au d1 alh" style="background:var(--gold)"></div>
+    <div class="recap-shifts">
+      <div class="rs-row rs-bright" id="rs0">
+        <div class="rs-num" style="color:var(--teal)">1</div>
+        <div class="rs-content">
+          <div class="rs-title">Externalize the <em class="a" style="color:var(--teal)">memory</em></div>
+          <div class="rs-desc">System instructions, knowledge bases, and memory files so AI builds context over time instead of starting from zero.</div>
+        </div>
+      </div>
+      <div class="rs-row rs-dimmed" id="rs1">
+        <div class="rs-num" style="color:var(--copper)">2</div>
+        <div class="rs-content">
+          <div class="rs-title">Externalize the <em class="a" style="color:var(--copper)">routing</em></div>
+          <div class="rs-desc">Bring AI to your files instead of bringing files to AI — one context file per folder lets AI navigate on its own.</div>
+        </div>
+      </div>
+      <div class="rs-row rs-dimmed" id="rs2">
+        <div class="rs-num" style="color:var(--rose)">3</div>
+        <div class="rs-content">
+          <div class="rs-title">Externalize the <em class="a" style="color:var(--rose)">standard</em></div>
+          <div class="rs-desc">Binary quality checklists so AI self-checks before you review — your judgment focuses only where it's needed.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</div>
+
+<script>
+  let cur = 0;
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  const chItems = document.querySelectorAll('.ch-item');
+  const kh = document.getElementById('kh');
+  document.getElementById('totS').textContent = total;
+
+  const chMap = { 0:[0], 1:[1,2,3], 2:[4,5,6], 3:[7,8,9,10], 4:[11,12,13], 5:[14] };
+  const chColors = { 0:'var(--gold)', 1:'var(--gold)', 2:'var(--teal)', 3:'var(--copper)', 4:'var(--rose)', 5:'var(--gold)' };
+
+  function getChFor(s) {
+    for (const [c, sl] of Object.entries(chMap)) { if (sl.includes(s)) return parseInt(c); }
+    return 0;
+  }
+
+  // ── Sub-step system ──
+  // Slide 13: 2 steps (0=step1 bright, 1=step2 bright)
+  // Slide 14: 3 steps (0=shift1, 1=shift2, 2=shift3)
+  const subStepMax = { 13: 1, 14: 2 };
+  let subStep = 0;
+
+  function applySubStep(slideIdx, step) {
+    if (slideIdx === 13) {
+      const dp1 = document.getElementById('dp1');
+      const dp2 = document.getElementById('dp2');
+      if (step === 0) {
+        dp1.classList.remove('dimmed'); dp1.classList.add('bright');
+        dp2.classList.remove('bright'); dp2.classList.add('dimmed');
+      } else {
+        dp1.classList.remove('bright'); dp1.classList.add('dimmed');
+        dp2.classList.remove('dimmed'); dp2.classList.add('bright');
+      }
+    }
+    if (slideIdx === 14) {
+      for (let i = 0; i < 3; i++) {
+        const row = document.getElementById('rs' + i);
+        if (i === step) {
+          row.classList.remove('rs-dimmed'); row.classList.add('rs-bright');
+        } else {
+          row.classList.remove('rs-bright'); row.classList.add('rs-dimmed');
+        }
+      }
+    }
+  }
+
+  function go(n) {
+    if (n < 0 || n >= total) return;
+    slides[cur].classList.remove('active');
+    slides[n].classList.add('active');
+    cur = n;
+    subStep = 0;
+    document.getElementById('curS').textContent = cur + 1;
+    const aCh = getChFor(cur);
+    chItems.forEach(item => {
+      const c = parseInt(item.dataset.ch);
+      item.classList.remove('active','visited');
+      if (c === aCh) item.classList.add('active');
+      else if (c < aCh) item.classList.add('visited');
+      const bar = item.querySelector('.ch-bar');
+      const lbl = item.querySelector('.ch-lbl');
+      if (c === aCh) {
+        const col = chColors[c]; bar.style.background = col; bar.style.boxShadow = `0 0 12px ${col}`; lbl.style.color = col;
+      } else if (c < aCh) {
+        bar.style.background = 'var(--text-mid)'; bar.style.boxShadow = 'none'; lbl.style.color = 'var(--text-mid)';
+      } else {
+        bar.style.background = 'var(--text-dim)'; bar.style.boxShadow = 'none'; lbl.style.color = 'var(--text-dim)';
+      }
+    });
+    // Reset sub-steps on entry
+    if (subStepMax[cur] !== undefined) applySubStep(cur, 0);
+    if (cur > 0) kh.classList.add('gone');
+  }
+
+  function goCh(c) { const f = chMap[c]?.[0]; if (f !== undefined) go(f); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+      e.preventDefault();
+      const max = subStepMax[cur];
+      if (max !== undefined && subStep < max) {
+        subStep++; applySubStep(cur, subStep);
+      } else {
+        go(cur + 1);
+      }
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (subStepMax[cur] !== undefined && subStep > 0) {
+        subStep--; applySubStep(cur, subStep);
+      } else {
+        go(cur - 1);
+        // Jump to last sub-step of previous slide if it has steps
+        const prevMax = subStepMax[cur];
+        if (prevMax !== undefined) {
+          subStep = prevMax; applySubStep(cur, subStep);
+        }
+      }
+    } else if (e.key === 'Home') { e.preventDefault(); go(0); }
+    else if (e.key === 'End') { e.preventDefault(); go(total - 1); }
+  });
+
+  go(0);
+</script>
+</body>
+</html>
